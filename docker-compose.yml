@@ -113,5 +113,23 @@ services:
       timeout: 5s
       retries: 10
 
+  analitica:
+    build:
+      context: .
+      dockerfile: services/analitica/Dockerfile
+    env_file: .env
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8005/health\")'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
