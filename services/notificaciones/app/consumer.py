@@ -2,26 +2,25 @@
 
 Se suscribe a los cuatro eventos de negocio y genera una notificacion simulada
 por cada uno (Message Translator). Implementa:
-  - Idempotencia (Idempotent Receiver).
+  - Idempotencia (Idempotent Receiver) via make_idempotent_handler.
   - Modo de fallo controlado ("chaos") para demostrar reintentos + DLQ.
 """
 import logging
 import threading
-import uuid
 
-from shared.events import Event, EventType
-from shared.idempotency import already_processed, mark_processed
+from shared.consuming import make_idempotent_handler
+from shared.events import EventType
 from shared.messaging import EventConsumer
 
+from . import repository as repo
 from .database import SessionLocal
-from .models import Notification
+from .models import ProcessedEvent
 from .translator import translate
 
 logger = logging.getLogger("notificaciones.consumer")
 CONSUMER_NAME = "notificaciones"
 
 # Bandera de fallo simulado para demostrar el escenario de resiliencia.
-# Cuando esta activa, el procesamiento falla y los mensajes terminan en la DLQ.
 chaos = {"enabled": False}
 
 ALL_EVENTS = [
@@ -32,44 +31,35 @@ ALL_EVENTS = [
 ]
 
 
-def process_event(event: Event) -> None:
+def on_event(db, event) -> None:
     """Genera y persiste la notificacion. Lanza excepcion si chaos esta activo."""
     if chaos["enabled"]:
         raise RuntimeError("Fallo simulado en el Servicio de Notificaciones")
+    student_id, message = translate(event)
+    repo.add_notification(
+        db,
+        event_id=event.eventId,
+        event_type=event.eventType,
+        student_id=student_id,
+        message=message,
+        correlation_id=event.correlationId,
+    )
+    logger.info("Notificacion generada para %s (%s)", student_id, event.eventType)
 
-    db = SessionLocal()
-    try:
-        if already_processed(db, event.eventId, CONSUMER_NAME):
-            logger.info("Evento %s ya procesado; se ignora", event.eventId)
-            return
 
-        student_id, message = translate(event)
-        db.add(
-            Notification(
-                id=f"NOT-{uuid.uuid4().hex[:8]}",
-                event_id=event.eventId,
-                event_type=event.eventType,
-                student_id=student_id,
-                message=message,
-                status="ENVIADA",
-                correlation_id=event.correlationId,
-            )
-        )
-        mark_processed(db, event.eventId, CONSUMER_NAME)
-        db.commit()
-        logger.info("Notificacion generada para %s (%s)", student_id, event.eventType)
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
+handle_event = make_idempotent_handler(
+    session_factory=SessionLocal,
+    consumer_name=CONSUMER_NAME,
+    processed_model=ProcessedEvent,
+    on_event=on_event,
+)
 
 
 def start_consumer_in_background() -> None:
     consumer = EventConsumer(
         service_name=CONSUMER_NAME,
         routing_keys=ALL_EVENTS,
-        handler=process_event,
+        handler=handle_event,
     )
     thread = threading.Thread(target=consumer.start, daemon=True)
     thread.start()

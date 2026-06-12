@@ -9,7 +9,7 @@ import logging
 from shared.events import Event
 from shared.messaging import connect_with_retry
 
-from .consumer import CONSUMER_NAME, process_event
+from .consumer import CONSUMER_NAME, handle_event
 
 logger = logging.getLogger("notificaciones.dlq")
 
@@ -43,7 +43,7 @@ def reprocess_dlq(limit: int = 100) -> dict:
                 break  # no hay mas mensajes
             try:
                 event = Event(**json.loads(body))
-                process_event(event)
+                handle_event(event)
                 channel.basic_ack(delivery_tag=method.delivery_tag)
                 reprocessed += 1
             except Exception as exc:  # noqa: BLE001

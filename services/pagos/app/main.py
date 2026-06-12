@@ -3,9 +3,7 @@
 Consume StudentEnrolled (genera deuda de matricula) y publica PaymentConfirmed.
 """
 import logging
-import uuid
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
 from typing import Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Query
@@ -14,9 +12,9 @@ from sqlalchemy.orm import Session
 from shared.events import Event, EventType
 from shared.messaging import publish_event
 
+from . import repository as repo
 from .consumer import start_consumer_in_background
 from .database import get_db, init_db
-from .models import Payment, StudentRef
 from .schemas import DebtCreate, PaymentOut, StudentWithPayments
 from .seed import seed_data
 
@@ -48,12 +46,12 @@ def health():
 @app.get("/students", response_model=list[StudentWithPayments], tags=["estudiantes"])
 def list_students(db: Session = Depends(get_db)):
     """Estudiantes matriculados con su detalle de pagos."""
-    return db.query(StudentRef).order_by(StudentRef.created_at.desc()).all()
+    return repo.list_students(db)
 
 
 @app.get("/students/{student_id}", response_model=StudentWithPayments, tags=["estudiantes"])
 def get_student(student_id: str, db: Session = Depends(get_db)):
-    student = db.get(StudentRef, student_id)
+    student = repo.get_student(db, student_id)
     if student is None:
         raise HTTPException(404, "Estudiante no encontrado en el modulo de pagos")
     return student
@@ -62,16 +60,9 @@ def get_student(student_id: str, db: Session = Depends(get_db)):
 @app.post("/debts", response_model=PaymentOut, status_code=201, tags=["pagos"])
 def create_debt(payload: DebtCreate, db: Session = Depends(get_db)):
     """Registra una obligacion de pago (o simula una deuda)."""
-    if db.get(StudentRef, payload.student_id) is None:
+    if repo.get_student(db, payload.student_id) is None:
         raise HTTPException(404, "Estudiante no encontrado en el modulo de pagos")
-    payment = Payment(
-        id=f"PAY-{uuid.uuid4().hex[:8]}",
-        student_id=payload.student_id,
-        concept=payload.concept,
-        amount=payload.amount,
-        status="PENDIENTE",
-    )
-    db.add(payment)
+    payment = repo.add_payment(db, payload.student_id, payload.concept, payload.amount)
     db.commit()
     db.refresh(payment)
     return payment
@@ -82,24 +73,19 @@ def list_payments(
     status: Optional[str] = Query(None, description="PENDIENTE o CONFIRMADO"),
     db: Session = Depends(get_db),
 ):
-    query = db.query(Payment)
-    if status:
-        query = query.filter(Payment.status == status.upper())
-    return query.order_by(Payment.created_at.desc()).all()
+    return repo.list_payments(db, status)
 
 
 @app.post("/payments/{payment_id}/confirm", response_model=PaymentOut, tags=["pagos"])
 def confirm_payment(payment_id: str, db: Session = Depends(get_db)):
     """Confirma un pago y publica el evento PaymentConfirmed."""
-    payment = db.get(Payment, payment_id)
+    payment = repo.get_payment(db, payment_id)
     if payment is None:
         raise HTTPException(404, "Pago no encontrado")
     if payment.status == "CONFIRMADO":
         raise HTTPException(409, "El pago ya estaba confirmado")
 
-    payment.status = "CONFIRMADO"
-    payment.confirmed_at = datetime.now(timezone.utc)
-
+    repo.mark_confirmed(db, payment)
     event = Event.create(
         EventType.PAYMENT_CONFIRMED,
         data={

@@ -1,18 +1,22 @@
 """Patron Idempotent Receiver.
 
-Registra los eventos ya procesados para evitar reprocesar mensajes duplicados
-(por reintentos o reentregas de RabbitMQ).
+Registra los eventos ya procesados para evitar reprocesar mensajes duplicados.
+Se ofrece como un *mixin* para que cada servicio lo declare sobre su propio
+`Base` (esquema independiente por servicio).
 """
 from datetime import datetime, timezone
 
 from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from .db import Base
 
+class ProcessedEventMixin:
+    """Mixin con la tabla de control de idempotencia.
 
-class ProcessedEvent(Base):
-    __tablename__ = "processed_events"
+    Uso en un servicio:
+        class ProcessedEvent(Base, ProcessedEventMixin):
+            __tablename__ = "processed_events"
+    """
 
     event_id: Mapped[str] = mapped_column(String, primary_key=True)
     consumer: Mapped[str] = mapped_column(String, primary_key=True)
@@ -21,16 +25,11 @@ class ProcessedEvent(Base):
     )
 
 
-def already_processed(db, event_id: str, consumer: str) -> bool:
+def already_processed(db, model, event_id: str, consumer: str) -> bool:
     """Indica si un evento ya fue procesado por este consumidor."""
-    return (
-        db.query(ProcessedEvent)
-        .filter_by(event_id=event_id, consumer=consumer)
-        .first()
-        is not None
-    )
+    return db.get(model, {"event_id": event_id, "consumer": consumer}) is not None
 
 
-def mark_processed(db, event_id: str, consumer: str) -> None:
+def mark_processed(db, model, event_id: str, consumer: str) -> None:
     """Marca un evento como procesado por este consumidor."""
-    db.add(ProcessedEvent(event_id=event_id, consumer=consumer))
+    db.add(model(event_id=event_id, consumer=consumer))

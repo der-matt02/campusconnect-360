@@ -6,44 +6,39 @@ poder listarlos en el portal docente sin depender en linea del Servicio Academic
 import logging
 import threading
 
+from shared.consuming import make_idempotent_handler
 from shared.events import Event, EventType
-from shared.idempotency import already_processed, mark_processed
 from shared.messaging import EventConsumer
 
+from . import repository as repo
 from .database import SessionLocal
-from .models import StudentRef
+from .models import ProcessedEvent
 
 logger = logging.getLogger("asistencia.consumer")
 CONSUMER_NAME = "asistencia"
 
 
-def handle_event(event: Event) -> None:
-    db = SessionLocal()
-    try:
-        if already_processed(db, event.eventId, CONSUMER_NAME):
-            logger.info("Evento %s ya procesado; se ignora", event.eventId)
-            return
+def on_event(db, event: Event) -> None:
+    """Proyecta el estudiante recien matriculado."""
+    if event.eventType != EventType.STUDENT_ENROLLED:
+        return
+    student_id = event.data.get("studentId")
+    repo.ensure_student(
+        db,
+        student_id=student_id,
+        full_name=event.data.get("fullName", "Sin nombre"),
+        school_id=event.data.get("schoolId"),
+        grade=event.data.get("grade"),
+    )
+    logger.info("Estudiante %s proyectado en asistencia", student_id)
 
-        if event.eventType == EventType.STUDENT_ENROLLED:
-            student_id = event.data.get("studentId")
-            if db.get(StudentRef, student_id) is None:
-                db.add(
-                    StudentRef(
-                        id=student_id,
-                        full_name=event.data.get("fullName", "Sin nombre"),
-                        school_id=event.data.get("schoolId"),
-                        grade=event.data.get("grade"),
-                    )
-                )
-                logger.info("Estudiante %s proyectado en asistencia", student_id)
 
-        mark_processed(db, event.eventId, CONSUMER_NAME)
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
+handle_event = make_idempotent_handler(
+    session_factory=SessionLocal,
+    consumer_name=CONSUMER_NAME,
+    processed_model=ProcessedEvent,
+    on_event=on_event,
+)
 
 
 def start_consumer_in_background() -> None:

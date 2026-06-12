@@ -1,15 +1,25 @@
-"""Fabrica de conexiones a PostgreSQL para los microservicios.
+"""Fabrica de conexiones a la base de datos para los microservicios.
 
-Cada servicio usa su propia base de datos (persistencia separada por servicio).
+Cada servicio usa su propia base de datos Y su propio `Base` declarativo
+(esquema independiente por servicio), evitando acoplar el modelo de datos entre
+microservicios.
 """
 from __future__ import annotations
 
 import os
 
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import DeclarativeBase, sessionmaker
+from sqlalchemy.pool import StaticPool
 
-Base = declarative_base()
+
+def new_base() -> type[DeclarativeBase]:
+    """Crea un `Base` declarativo independiente para un servicio."""
+
+    class Base(DeclarativeBase):
+        pass
+
+    return Base
 
 
 def build_database_url(db_name: str) -> str:
@@ -21,12 +31,20 @@ def build_database_url(db_name: str) -> str:
 
 
 def make_engine(db_name: str):
-    """Crea el engine de SQLAlchemy reintentando hasta que la BD este lista."""
-    return create_engine(
-        build_database_url(db_name),
-        pool_pre_ping=True,
-        future=True,
-    )
+    """Crea el engine del servicio.
+
+    Si `DATABASE_URL` esta definida (p. ej. SQLite en pruebas) se usa esa;
+    de lo contrario se construye la URL de PostgreSQL del servicio.
+    """
+    url = os.getenv("DATABASE_URL") or build_database_url(db_name)
+    if url.startswith("sqlite"):
+        return create_engine(
+            url,
+            connect_args={"check_same_thread": False},
+            poolclass=StaticPool,
+            future=True,
+        )
+    return create_engine(url, pool_pre_ping=True, future=True)
 
 
 def make_session_factory(engine):
