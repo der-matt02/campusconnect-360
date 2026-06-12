@@ -40,6 +40,16 @@ services:
       timeout: 5s
       retries: 10
 
+  # ---------- Frontend (portales + dashboard) ----------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    depends_on:
+      - gateway
+
   # ---------- API Gateway (entrada centralizada) ----------
   gateway:
     build:
