@@ -8,7 +8,15 @@ from datetime import datetime, timezone
 from sqlalchemy import JSON, DateTime, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from shared.db import Base
+from shared.idempotency import ProcessedEventMixin
+
+from .database import Base
+
+
+class ProcessedEvent(Base, ProcessedEventMixin):
+    """Control de idempotencia del servicio (Idempotent Receiver)."""
+
+    __tablename__ = "processed_events"
 
 
 class EventLog(Base):

@@ -7,14 +7,13 @@ import logging
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from shared.events import EventType
 
+from . import repository as repo
 from .consumer import start_consumer_in_background
 from .database import get_db, init_db
-from .models import EventLog
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("analitica")
@@ -40,35 +39,20 @@ def health():
     return {"status": "ok", "service": "analitica"}
 
 
-def _count(db: Session, event_type: str) -> int:
-    return db.query(EventLog).filter_by(event_type=event_type).count()
-
-
 @app.get("/dashboard", tags=["analitica"])
 def dashboard(db: Session = Depends(get_db)):
     """Indicadores consolidados del ecosistema (datos reales proyectados)."""
-    matriculados = _count(db, EventType.STUDENT_ENROLLED)
-    pagos_confirmados = _count(db, EventType.PAYMENT_CONFIRMED)
-    asistencias = _count(db, EventType.ATTENDANCE_RECORDED)
-    incidentes = _count(db, EventType.INCIDENT_REPORTED)
-    eventos_procesados = db.query(EventLog).count()
-
-    # Monto total confirmado, sumando el campo amount del payload.
-    monto_confirmado = 0.0
-    for row in db.query(EventLog).filter_by(event_type=EventType.PAYMENT_CONFIRMED).all():
-        monto_confirmado += float(row.payload.get("amount", 0) or 0)
-
-    # Cada matricula genera una deuda; los pendientes son los aun no confirmados.
-    pagos_pendientes = max(matriculados - pagos_confirmados, 0)
-
+    matriculados = repo.count_by_type(db, EventType.STUDENT_ENROLLED)
+    pagos_confirmados = repo.count_by_type(db, EventType.PAYMENT_CONFIRMED)
     return {
         "matriculados": matriculados,
         "pagosConfirmados": pagos_confirmados,
-        "pagosPendientes": pagos_pendientes,
-        "montoConfirmado": round(monto_confirmado, 2),
-        "asistencias": asistencias,
-        "incidentes": incidentes,
-        "eventosProcesados": eventos_procesados,
+        # Cada matricula genera una deuda; los pendientes son los aun no confirmados.
+        "pagosPendientes": max(matriculados - pagos_confirmados, 0),
+        "montoConfirmado": repo.sum_confirmed_amount(db),
+        "asistencias": repo.count_by_type(db, EventType.ATTENDANCE_RECORDED),
+        "incidentes": repo.count_by_type(db, EventType.INCIDENT_REPORTED),
+        "eventosProcesados": repo.count_all(db),
         "estado": "OK",
     }
 
@@ -76,12 +60,6 @@ def dashboard(db: Session = Depends(get_db)):
 @app.get("/events", tags=["analitica"])
 def recent_events(limit: int = 20, db: Session = Depends(get_db)):
     """Ultimos eventos procesados (evidencia de trazabilidad)."""
-    rows = (
-        db.query(EventLog)
-        .order_by(EventLog.occurred_at.desc())
-        .limit(limit)
-        .all()
-    )
     return [
         {
             "eventId": r.event_id,
@@ -90,16 +68,11 @@ def recent_events(limit: int = 20, db: Session = Depends(get_db)):
             "correlationId": r.correlation_id,
             "occurredAt": r.occurred_at,
         }
-        for r in rows
+        for r in repo.recent_events(db, limit)
     ]
 
 
 @app.get("/events/by-type", tags=["analitica"])
 def events_by_type(db: Session = Depends(get_db)):
     """Conteo de eventos agrupado por tipo."""
-    rows = (
-        db.query(EventLog.event_type, func.count(EventLog.id))
-        .group_by(EventLog.event_type)
-        .all()
-    )
-    return {event_type: count for event_type, count in rows}
+    return repo.events_grouped_by_type(db)
