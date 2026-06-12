@@ -6,48 +6,43 @@ Escucha PaymentConfirmed para actualizar el estado financiero del estudiante
 import logging
 import threading
 
+from shared.consuming import make_idempotent_handler
 from shared.events import Event, EventType
-from shared.idempotency import already_processed, mark_processed
 from shared.messaging import EventConsumer
 
 from .database import SessionLocal
-from .models import Student, StudentEvent
+from .models import ProcessedEvent
+from .repository import add_event, get_student
 
 logger = logging.getLogger("academico.consumer")
 CONSUMER_NAME = "academico"
 
 
-def handle_event(event: Event) -> None:
-    db = SessionLocal()
-    try:
-        if already_processed(db, event.eventId, CONSUMER_NAME):
-            logger.info("Evento %s ya procesado; se ignora", event.eventId)
-            return
+def on_event(db, event: Event) -> None:
+    """Logica de negocio: actualiza el estado financiero ante un pago confirmado."""
+    if event.eventType != EventType.PAYMENT_CONFIRMED:
+        return
+    student = get_student(db, event.data.get("studentId"))
+    if student is None:
+        logger.warning("Estudiante %s no encontrado", event.data.get("studentId"))
+        return
+    student.financial_status = "AL_DIA"
+    add_event(
+        db,
+        student_id=student.id,
+        event_type=event.eventType,
+        correlation_id=event.correlationId,
+        summary=f"Pago confirmado por {event.data.get('amount')}",
+    )
+    logger.info("Estado financiero actualizado para %s", student.id)
 
-        if event.eventType == EventType.PAYMENT_CONFIRMED:
-            student_id = event.data.get("studentId")
-            student = db.get(Student, student_id)
-            if student is None:
-                logger.warning("Estudiante %s no encontrado", student_id)
-            else:
-                student.financial_status = "AL_DIA"
-                db.add(
-                    StudentEvent(
-                        student_id=student.id,
-                        event_type=event.eventType,
-                        correlation_id=event.correlationId,
-                        summary=f"Pago confirmado por {event.data.get('amount')}",
-                    )
-                )
-                logger.info("Estado financiero actualizado para %s", student_id)
 
-        mark_processed(db, event.eventId, CONSUMER_NAME)
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
+handle_event = make_idempotent_handler(
+    session_factory=SessionLocal,
+    consumer_name=CONSUMER_NAME,
+    processed_model=ProcessedEvent,
+    on_event=on_event,
+)
 
 
 def start_consumer_in_background() -> None:

@@ -1,9 +1,12 @@
-"""Conexion a la base de datos del Servicio Academico."""
+"""Conexion y `Base` declarativo del Servicio Academico."""
 import os
 
-from shared.db import Base, make_engine, make_session_factory
+from shared.db import make_engine, make_session_factory, new_base
 
 DB_NAME = os.getenv("DB_ACADEMICO", "academico_db")
+
+# Cada servicio es dueno de su propio esquema (Base independiente).
+Base = new_base()
 
 engine = make_engine(DB_NAME)
 SessionLocal = make_session_factory(engine)
@@ -20,7 +23,6 @@ def get_db():
 
 def init_db():
     """Crea las tablas si no existen."""
-    # Importa los modelos para registrarlos en el metadata antes de crear.
-    from . import models  # noqa: F401
+    from . import models  # noqa: F401  (registra los modelos en el metadata)
 
     Base.metadata.create_all(bind=engine)
