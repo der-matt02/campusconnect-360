@@ -4,7 +4,6 @@ Registra asistencia e incidentes y publica los eventos AttendanceRecorded e
 IncidentReported. Consume StudentEnrolled para proyectar estudiantes.
 """
 import logging
-import uuid
 from contextlib import asynccontextmanager
 
 from fastapi import Depends, FastAPI, HTTPException
@@ -13,9 +12,9 @@ from sqlalchemy.orm import Session
 from shared.events import Event, EventType
 from shared.messaging import publish_event
 
+from . import repository as repo
 from .consumer import start_consumer_in_background
 from .database import get_db, init_db
-from .models import Attendance, Incident, StudentRef
 from .schemas import (
     AttendanceCreate,
     AttendanceOut,
@@ -52,23 +51,16 @@ def health():
 
 @app.get("/students", response_model=list[StudentOut], tags=["estudiantes"])
 def list_students(db: Session = Depends(get_db)):
-    return db.query(StudentRef).order_by(StudentRef.created_at.desc()).all()
+    return repo.list_students(db)
 
 
 @app.post("/attendance", response_model=AttendanceOut, status_code=201, tags=["asistencia"])
 def register_attendance(payload: AttendanceCreate, db: Session = Depends(get_db)):
     """Registra asistencia y publica AttendanceRecorded."""
-    if db.get(StudentRef, payload.student_id) is None:
+    if repo.get_student(db, payload.student_id) is None:
         raise HTTPException(404, "Estudiante no encontrado en el modulo de asistencia")
 
-    record = Attendance(
-        id=f"ATT-{uuid.uuid4().hex[:8]}",
-        student_id=payload.student_id,
-        date=payload.date,
-        status=payload.status.upper(),
-    )
-    db.add(record)
-
+    record = repo.add_attendance(db, payload.student_id, payload.date, payload.status)
     event = Event.create(
         EventType.ATTENDANCE_RECORDED,
         data={
@@ -88,17 +80,10 @@ def register_attendance(payload: AttendanceCreate, db: Session = Depends(get_db)
 @app.post("/incidents", response_model=IncidentOut, status_code=201, tags=["incidentes"])
 def register_incident(payload: IncidentCreate, db: Session = Depends(get_db)):
     """Registra un incidente/novedad y publica IncidentReported."""
-    if db.get(StudentRef, payload.student_id) is None:
+    if repo.get_student(db, payload.student_id) is None:
         raise HTTPException(404, "Estudiante no encontrado en el modulo de asistencia")
 
-    incident = Incident(
-        id=f"INC-{uuid.uuid4().hex[:8]}",
-        student_id=payload.student_id,
-        severity=payload.severity.upper(),
-        description=payload.description,
-    )
-    db.add(incident)
-
+    incident = repo.add_incident(db, payload.student_id, payload.severity, payload.description)
     event = Event.create(
         EventType.INCIDENT_REPORTED,
         data={
@@ -121,12 +106,7 @@ def register_incident(payload: IncidentCreate, db: Session = Depends(get_db)):
     tags=["asistencia"],
 )
 def student_attendance(student_id: str, db: Session = Depends(get_db)):
-    return (
-        db.query(Attendance)
-        .filter_by(student_id=student_id)
-        .order_by(Attendance.created_at.desc())
-        .all()
-    )
+    return repo.list_attendance(db, student_id)
 
 
 @app.get(
@@ -135,9 +115,4 @@ def student_attendance(student_id: str, db: Session = Depends(get_db)):
     tags=["incidentes"],
 )
 def student_incidents(student_id: str, db: Session = Depends(get_db)):
-    return (
-        db.query(Incident)
-        .filter_by(student_id=student_id)
-        .order_by(Incident.created_at.desc())
-        .all()
-    )
+    return repo.list_incidents(db, student_id)
