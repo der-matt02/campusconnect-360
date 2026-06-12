@@ -123,6 +123,16 @@ campusconnect-360/
 └── docs/                   # Documentación de arquitectura
 ```
 
+## Pruebas
+
+```bash
+pip install -r requirements-dev.txt
+pytest
+```
+
+Cubren los contratos de eventos, el patrón Idempotent Receiver y la
+configuración del consumidor (colas y DLQ).
+
 ## Documentación
 
 - [Documento de arquitectura](docs/arquitectura.md)
