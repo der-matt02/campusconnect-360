@@ -94,6 +94,10 @@ docker compose up --build
 7. **Escenario de falla**: desde el Dashboard se activa el "fallo simulado", se
    genera un evento que cae a la **DLQ**, y luego se **reprocesa** (resiliencia).
 
+> Atajo: el script [`scripts/demo.sh`](scripts/demo.sh) ejecuta automáticamente
+> todo el día de operación (incluido el escenario de falla) contra el Gateway.
+> Úsalo con el ecosistema arriba: `bash scripts/demo.sh`.
+
 ## Puertos
 
 | Componente | Puerto |
