@@ -14,7 +14,7 @@ create_db() {
 EOSQL
 }
 
-for db in "$DB_ACADEMICO" "$DB_PAGOS" "$DB_ASISTENCIA" "$DB_ANALITICA"; do
+for db in "$DB_ACADEMICO" "$DB_PAGOS" "$DB_ASISTENCIA" "$DB_NOTIFICACIONES" "$DB_ANALITICA"; do
   create_db "$db"
 done
 
