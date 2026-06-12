@@ -148,6 +148,13 @@ Cada microservicio se prueba en su propio proceso (todos tienen un paquete
 
 ## Documentación
 
-- [Documento de arquitectura](docs/arquitectura.md)
+- [Documento de arquitectura](docs/arquitectura.md) — documento principal (17 secciones)
+- [Catálogo de patrones](docs/patrones.md) — integración, arquitectura y diseño
+- [Contratos de eventos](docs/eventos.md) — envoltura, ejemplos y matriz pub/sub
+- Diagramas (Mermaid):
+  - [Arquitectura / componentes](docs/diagramas/01-arquitectura.md)
+  - [Flujo de eventos (secuencias)](docs/diagramas/02-flujo-eventos.md)
+  - [Modelo de datos (ER por servicio)](docs/diagramas/03-modelo-datos.md)
+  - [Despliegue (Docker Compose)](docs/diagramas/04-despliegue.md)
 - [Bitácora de trabajo](docs/bitacora.md)
 - [Colección Postman](docs/postman/CampusConnect360.postman_collection.json) — respaldo técnico; ejecuta "Auth / Login" primero para guardar el JWT.

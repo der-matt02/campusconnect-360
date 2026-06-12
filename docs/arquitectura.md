@@ -57,6 +57,10 @@ Contraseña de todos: `campus123`.
 
 Cada servicio tiene su propia base de datos PostgreSQL (persistencia separada).
 
+> Diagrama de componentes (Mermaid): [docs/diagramas/01-arquitectura.md](diagramas/01-arquitectura.md).
+> Diagrama de despliegue: [docs/diagramas/04-despliegue.md](diagramas/04-despliegue.md).
+> Modelo de datos por servicio: [docs/diagramas/03-modelo-datos.md](diagramas/03-modelo-datos.md).
+
 ## 5. Diagrama de flujo de eventos
 
 ```
@@ -76,6 +80,9 @@ Asistencia ─IncidentReported──►┌─ Notificaciones
 ```
 
 Un mismo evento es consumido por varios servicios (Publish/Subscribe).
+
+> Diagramas de secuencia detallados (los 4 flujos + escenario de resiliencia):
+> [docs/diagramas/02-flujo-eventos.md](diagramas/02-flujo-eventos.md).
 
 ## 6. Servicios implementados
 
@@ -123,6 +130,9 @@ Estructura común (Event Message):
 | `AttendanceRecorded` | attendanceId, studentId, date, status |
 | `IncidentReported` | incidentId, studentId, severity, description |
 
+> Contratos completos con ejemplos y matriz de publicación/consumo:
+> [docs/eventos.md](eventos.md).
+
 ## 9. Patrones de integración aplicados
 
 | Patrón | Evidencia |
@@ -138,14 +148,22 @@ Estructura común (Event Message):
 | CQRS | `analitica` proyecta eventos a un modelo de lectura |
 | Health Check API | `/health` en cada servicio + agregado en el Gateway |
 
+> Catálogo detallado de patrones (integración, arquitectura y diseño) con su
+> evidencia en el código: [docs/patrones.md](patrones.md).
+
 ## 10. Decisiones arquitectónicas
 
 - **FastAPI** en todos los servicios: Swagger automático, el equipo domina Python.
 - **API Gateway propio en FastAPI**: máxima comprensión y capacidad de defensa.
 - **RabbitMQ** sobre Kafka: más simple de demostrar Pub/Sub, P2P y DLQ.
-- **Una base de datos por servicio**: aislamiento de datos.
-- **Proyecciones locales** (StudentRef en Pagos/Asistencia): cada servicio no
+- **Una base de datos y un `Base` declarativo por servicio**: aislamiento total
+  del esquema (se evita el anti-patrón de compartir el modelo de datos).
+- **Proyecciones locales** (`StudentRef` en Pagos/Asistencia): cada servicio no
   depende en línea de otro para operar.
+- **Patrón Repository** (`repository.py` por servicio): aísla el acceso a datos
+  de los endpoints y consumidores.
+- **Consumo idempotente centralizado** (`shared/consuming.py`): se aplica DRY a
+  la lógica repetida de sesión + idempotencia + commit en los 5 consumidores.
 
 ## 11. Seguridad
 
@@ -172,6 +190,15 @@ Estructura común (Event Message):
   DLQ).
 - **Trazabilidad**: `correlationId` en cada evento; `analitica` expone
   `/events` con el historial de eventos procesados.
+
+### 13.1 Calidad y pruebas
+
+- **84 pruebas automatizadas** (pytest) con **~99% de cobertura** sobre la capa
+  compartida, los 5 microservicios y el Gateway.
+- Cada microservicio se prueba en aislamiento con **SQLite en memoria** y
+  dependencias simuladas (sin RabbitMQ real): endpoints, consumidores,
+  repositorios, idempotencia, traductor y seguridad.
+- Ejecución: `bash scripts/coverage.sh`.
 
 ## 14. Integración de datos y dashboard
 
