@@ -11,10 +11,10 @@ from fastapi import Depends, FastAPI
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from . import repository as repo
 from .consumer import chaos, start_consumer_in_background
 from .database import get_db, init_db
 from .dlq import dlq_depth, reprocess_dlq
-from .models import Notification
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("notificaciones")
@@ -46,7 +46,6 @@ def health():
 
 @app.get("/notifications", tags=["notificaciones"])
 def list_notifications(db: Session = Depends(get_db)):
-    rows = db.query(Notification).order_by(Notification.created_at.desc()).all()
     return [
         {
             "id": n.id,
@@ -56,16 +55,15 @@ def list_notifications(db: Session = Depends(get_db)):
             "status": n.status,
             "createdAt": n.created_at,
         }
-        for n in rows
+        for n in repo.list_notifications(db)
     ]
 
 
 @app.get("/stats", tags=["notificaciones"])
 def stats(db: Session = Depends(get_db)):
     """Resumen para el dashboard: enviadas y mensajes fallidos (en la DLQ)."""
-    enviadas = db.query(Notification).filter_by(status="ENVIADA").count()
     return {
-        "enviadas": enviadas,
+        "enviadas": repo.count_sent(db),
         "fallidas": dlq_depth(),
         "chaos": chaos["enabled"],
     }
