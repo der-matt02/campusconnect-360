@@ -5,14 +5,14 @@ una obligacion de pago inicial (matricula).
 """
 import logging
 import threading
-import uuid
 
+from shared.consuming import make_idempotent_handler
 from shared.events import Event, EventType
-from shared.idempotency import already_processed, mark_processed
 from shared.messaging import EventConsumer
 
+from . import repository as repo
 from .database import SessionLocal
-from .models import Payment, StudentRef
+from .models import ProcessedEvent
 
 logger = logging.getLogger("pagos.consumer")
 CONSUMER_NAME = "pagos"
@@ -20,43 +20,33 @@ CONSUMER_NAME = "pagos"
 MATRICULA_FEE = 250.0
 
 
-def handle_event(event: Event) -> None:
-    db = SessionLocal()
-    try:
-        if already_processed(db, event.eventId, CONSUMER_NAME):
-            logger.info("Evento %s ya procesado; se ignora", event.eventId)
-            return
+def on_event(db, event: Event) -> None:
+    """Crea la proyeccion del estudiante y su deuda de matricula."""
+    if event.eventType != EventType.STUDENT_ENROLLED:
+        return
+    student_id = event.data.get("studentId")
+    repo.ensure_student(
+        db,
+        student_id=student_id,
+        full_name=event.data.get("fullName", "Sin nombre"),
+        school_id=event.data.get("schoolId"),
+        grade=event.data.get("grade"),
+    )
+    repo.add_payment(
+        db,
+        student_id=student_id,
+        concept=f"Matricula periodo {event.data.get('period', 'N/A')}",
+        amount=MATRICULA_FEE,
+    )
+    logger.info("Deuda de matricula creada para %s", student_id)
 
-        if event.eventType == EventType.STUDENT_ENROLLED:
-            student_id = event.data.get("studentId")
-            if db.get(StudentRef, student_id) is None:
-                db.add(
-                    StudentRef(
-                        id=student_id,
-                        full_name=event.data.get("fullName", "Sin nombre"),
-                        school_id=event.data.get("schoolId"),
-                        grade=event.data.get("grade"),
-                    )
-                )
-            # Genera la deuda inicial de matricula.
-            db.add(
-                Payment(
-                    id=f"PAY-{uuid.uuid4().hex[:8]}",
-                    student_id=student_id,
-                    concept=f"Matricula periodo {event.data.get('period', 'N/A')}",
-                    amount=MATRICULA_FEE,
-                    status="PENDIENTE",
-                )
-            )
-            logger.info("Deuda de matricula creada para %s", student_id)
 
-        mark_processed(db, event.eventId, CONSUMER_NAME)
-        db.commit()
-    except Exception:
-        db.rollback()
-        raise
-    finally:
-        db.close()
+handle_event = make_idempotent_handler(
+    session_factory=SessionLocal,
+    consumer_name=CONSUMER_NAME,
+    processed_model=ProcessedEvent,
+    on_event=on_event,
+)
 
 
 def start_consumer_in_background() -> None:
