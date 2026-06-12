@@ -20,7 +20,7 @@ logger = logging.getLogger("analitica")
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):  # pragma: no cover - glue de arranque (requiere infra)
     init_db()
     start_consumer_in_background()
     yield

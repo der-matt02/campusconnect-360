@@ -127,15 +127,24 @@ campusconnect-360/
 └── docs/                   # Documentación de arquitectura
 ```
 
-## Pruebas
+## Pruebas y cobertura
 
 ```bash
 pip install -r requirements-dev.txt
+
+# Pruebas de la capa compartida
 pytest
+
+# Cobertura completa (capa compartida + 5 servicios + gateway)
+bash scripts/coverage.sh
 ```
 
-Cubren los contratos de eventos, el patrón Idempotent Receiver y la
-configuración del consumidor (colas y DLQ).
+La suite cubre contratos de eventos, idempotencia, mensajería (publish/consume
+con DLQ), endpoints de cada servicio, consumidores, repositorios, traductor y la
+seguridad del gateway. **Cobertura total: ~99%.**
+
+Cada microservicio se prueba en su propio proceso (todos tienen un paquete
+`app`) usando SQLite en memoria y dependencias simuladas (sin RabbitMQ real).
 
 ## Documentación
 

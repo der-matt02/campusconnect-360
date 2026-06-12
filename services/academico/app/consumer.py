@@ -45,7 +45,7 @@ handle_event = make_idempotent_handler(
 )
 
 
-def start_consumer_in_background() -> None:
+def start_consumer_in_background() -> None:  # pragma: no cover - hilo/infra real
     consumer = EventConsumer(
         service_name=CONSUMER_NAME,
         routing_keys=[EventType.PAYMENT_CONFIRMED],

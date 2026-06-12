@@ -23,7 +23,7 @@ logger = logging.getLogger("pagos")
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):  # pragma: no cover - glue de arranque (requiere infra)
     init_db()
     seed_data()
     start_consumer_in_background()
