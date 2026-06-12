@@ -40,6 +40,31 @@ services:
       timeout: 5s
       retries: 10
 
+  # ---------- API Gateway (entrada centralizada) ----------
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      academico:
+        condition: service_started
+      pagos:
+        condition: service_started
+      asistencia:
+        condition: service_started
+      notificaciones:
+        condition: service_started
+      analitica:
+        condition: service_started
+    healthcheck:
+      test: ["CMD-SHELL", "python -c 'import urllib.request; urllib.request.urlopen(\"http://localhost:8000/health\")'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
   # ---------- Microservicios ----------
   academico:
     build:
