@@ -127,3 +127,4 @@ campusconnect-360/
 
 - [Documento de arquitectura](docs/arquitectura.md)
 - [Bitácora de trabajo](docs/bitacora.md)
+- [Colección Postman](docs/postman/CampusConnect360.postman_collection.json) — respaldo técnico; ejecuta "Auth / Login" primero para guardar el JWT.
