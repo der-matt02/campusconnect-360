@@ -1,0 +1,217 @@
+{
+  "info": {
+    "name": "CampusConnect 360",
+    "description": "Coleccion de respaldo tecnico. Todas las llamadas pasan por el API Gateway (http://localhost:8000). Ejecuta primero 'Auth / Login' para guardar el JWT automaticamente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "token", "value": "" },
+    { "key": "studentId", "value": "STU-0001" },
+    { "key": "paymentId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const data = pm.response.json();",
+                  "pm.collectionVariables.set('token', data.access_token);",
+                  "pm.test('token recibido', () => pm.expect(data.access_token).to.be.a('string'));"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"secretaria\",\n  \"password\": \"campus123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Me",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/auth/me", "host": ["{{baseUrl}}"], "path": ["auth", "me"] }
+          }
+        },
+        {
+          "name": "Health agregado",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Academico",
+      "item": [
+        {
+          "name": "Listar estudiantes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/academico/students", "host": ["{{baseUrl}}"], "path": ["api", "academico", "students"] }
+          }
+        },
+        {
+          "name": "Registrar estudiante",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/academico/students", "host": ["{{baseUrl}}"], "path": ["api", "academico", "students"] },
+            "body": { "mode": "raw", "raw": "{\n  \"full_name\": \"Nuevo Estudiante\",\n  \"document_id\": \"1700009999\",\n  \"email\": \"nuevo@example.edu\",\n  \"school_id\": \"SCH-001\",\n  \"grade\": \"8vo EGB\"\n}" }
+          }
+        },
+        {
+          "name": "Crear matricula (StudentEnrolled)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/academico/enrollments", "host": ["{{baseUrl}}"], "path": ["api", "academico", "enrollments"] },
+            "body": { "mode": "raw", "raw": "{\n  \"student_id\": \"{{studentId}}\",\n  \"period\": \"2026-1\"\n}" }
+          }
+        },
+        {
+          "name": "Ficha del estudiante",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/academico/students/{{studentId}}", "host": ["{{baseUrl}}"], "path": ["api", "academico", "students", "{{studentId}}"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pagos",
+      "item": [
+        {
+          "name": "Listar pagos pendientes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/pagos/payments?status=PENDIENTE", "host": ["{{baseUrl}}"], "path": ["api", "pagos", "payments"], "query": [{ "key": "status", "value": "PENDIENTE" }] }
+          }
+        },
+        {
+          "name": "Confirmar pago (PaymentConfirmed)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/pagos/payments/{{paymentId}}/confirm", "host": ["{{baseUrl}}"], "path": ["api", "pagos", "payments", "{{paymentId}}", "confirm"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Asistencia",
+      "item": [
+        {
+          "name": "Registrar asistencia (AttendanceRecorded)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/asistencia/attendance", "host": ["{{baseUrl}}"], "path": ["api", "asistencia", "attendance"] },
+            "body": { "mode": "raw", "raw": "{\n  \"student_id\": \"{{studentId}}\",\n  \"date\": \"2026-06-12\",\n  \"status\": \"presente\"\n}" }
+          }
+        },
+        {
+          "name": "Registrar incidente (IncidentReported)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/asistencia/incidents", "host": ["{{baseUrl}}"], "path": ["api", "asistencia", "incidents"] },
+            "body": { "mode": "raw", "raw": "{\n  \"student_id\": \"{{studentId}}\",\n  \"severity\": \"media\",\n  \"description\": \"Novedad de prueba\"\n}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analitica",
+      "item": [
+        {
+          "name": "Dashboard",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/analitica/dashboard", "host": ["{{baseUrl}}"], "path": ["api", "analitica", "dashboard"] }
+          }
+        },
+        {
+          "name": "Eventos recientes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/analitica/events", "host": ["{{baseUrl}}"], "path": ["api", "analitica", "events"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Notificaciones (resiliencia)",
+      "item": [
+        {
+          "name": "Listar notificaciones",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/notificaciones/notifications", "host": ["{{baseUrl}}"], "path": ["api", "notificaciones", "notifications"] }
+          }
+        },
+        {
+          "name": "Activar fallo (chaos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/notificaciones/chaos", "host": ["{{baseUrl}}"], "path": ["api", "notificaciones", "chaos"] },
+            "body": { "mode": "raw", "raw": "{\n  \"enabled\": true\n}" }
+          }
+        },
+        {
+          "name": "Ver DLQ",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/notificaciones/dlq", "host": ["{{baseUrl}}"], "path": ["api", "notificaciones", "dlq"] }
+          }
+        },
+        {
+          "name": "Reprocesar DLQ",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/notificaciones/dlq/reprocess", "host": ["{{baseUrl}}"], "path": ["api", "notificaciones", "dlq", "reprocess"] }
+          }
+        }
+      ]
+    }
+  ]
+}

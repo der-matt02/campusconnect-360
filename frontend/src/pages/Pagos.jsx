@@ -1,0 +1,118 @@
+// Portal Financiero / Pagos: consultar deudas, registrar y confirmar pagos.
+import { useEffect, useState } from "react";
+import { api } from "../api";
+
+export default function Pagos() {
+  const [students, setStudents] = useState([]);
+  const [payments, setPayments] = useState([]);
+  const [filter, setFilter] = useState("");
+  const [msg, setMsg] = useState(null);
+  const [debt, setDebt] = useState({ student_id: "", concept: "", amount: 100 });
+
+  async function load() {
+    try {
+      setStudents(await api.pagosStudents());
+      setPayments(await api.payments(filter));
+    } catch (e) {
+      setMsg({ type: "error", text: e.message });
+    }
+  }
+  useEffect(() => { load(); }, [filter]);
+
+  async function confirm(id) {
+    setMsg(null);
+    try {
+      await api.confirmPayment(id);
+      setMsg({ type: "success", text: "Pago confirmado (evento PaymentConfirmed publicado)." });
+      load();
+    } catch (e) {
+      setMsg({ type: "error", text: e.message });
+    }
+  }
+
+  async function createDebt(e) {
+    e.preventDefault();
+    setMsg(null);
+    try {
+      await api.createDebt({ ...debt, amount: Number(debt.amount) });
+      setMsg({ type: "success", text: "Obligacion de pago registrada." });
+      load();
+    } catch (e) {
+      setMsg({ type: "error", text: e.message });
+    }
+  }
+
+  return (
+    <div>
+      <h2>Portal Financiero / Pagos</h2>
+      {msg && <div className={`alert ${msg.type}`}>{msg.text}</div>}
+
+      <div className="row">
+        <div className="card">
+          <h3>Estudiantes matriculados</h3>
+          <table>
+            <thead><tr><th>ID</th><th>Nombre</th><th>Pagos</th></tr></thead>
+            <tbody>
+              {students.map((s) => (
+                <tr key={s.id}>
+                  <td>{s.id}</td>
+                  <td>{s.full_name}</td>
+                  <td>{s.payments?.length || 0}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="card">
+          <h3>Registrar deuda / simular obligacion</h3>
+          <form onSubmit={createDebt}>
+            <label>ID del estudiante</label>
+            <input value={debt.student_id} required
+              onChange={(e) => setDebt({ ...debt, student_id: e.target.value })} />
+            <label>Concepto</label>
+            <input value={debt.concept} required
+              onChange={(e) => setDebt({ ...debt, concept: e.target.value })} />
+            <label>Monto</label>
+            <input type="number" value={debt.amount}
+              onChange={(e) => setDebt({ ...debt, amount: e.target.value })} />
+            <button type="submit">Registrar deuda</button>
+          </form>
+        </div>
+      </div>
+
+      <div className="card">
+        <h3>Pagos</h3>
+        <label>Filtrar por estado</label>
+        <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ maxWidth: 240 }}>
+          <option value="">Todos</option>
+          <option value="PENDIENTE">Pendientes</option>
+          <option value="CONFIRMADO">Confirmados</option>
+        </select>
+        <table style={{ marginTop: "1rem" }}>
+          <thead>
+            <tr><th>ID</th><th>Estudiante</th><th>Concepto</th><th>Monto</th><th>Estado</th><th></th></tr>
+          </thead>
+          <tbody>
+            {payments.map((p) => (
+              <tr key={p.id}>
+                <td>{p.id}</td>
+                <td>{p.student_id}</td>
+                <td>{p.concept}</td>
+                <td>${p.amount}</td>
+                <td>
+                  <span className={`badge ${p.status === "CONFIRMADO" ? "ok" : "warn"}`}>{p.status}</span>
+                </td>
+                <td>
+                  {p.status === "PENDIENTE" && (
+                    <button className="green" onClick={() => confirm(p.id)}>Confirmar pago</button>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
