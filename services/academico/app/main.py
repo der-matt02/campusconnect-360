@@ -87,6 +87,9 @@ def create_enrollment(payload: EnrollmentCreate, db: Session = Depends(get_db)):
     if student is None:
         raise HTTPException(404, "Estudiante no encontrado")
 
+    if any(enr.period == payload.period for enr in student.enrollments):
+        raise HTTPException(409, f"El estudiante ya está matriculado en el periodo {payload.period}")
+
     enrollment = repo.create_enrollment(db, payload.student_id, payload.period)
 
     # Publica el evento de negocio (Event Message + Publish/Subscribe).

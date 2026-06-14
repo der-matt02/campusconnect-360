@@ -67,9 +67,11 @@ export default function Pagos() {
         <div className="card">
           <h3>Registrar deuda / simular obligacion</h3>
           <form onSubmit={createDebt}>
-            <label>ID del estudiante</label>
-            <input value={debt.student_id} required
-              onChange={(e) => setDebt({ ...debt, student_id: e.target.value })} />
+            <label>Estudiante</label>
+            <select value={debt.student_id} required onChange={(e) => setDebt({ ...debt, student_id: e.target.value })}>
+              <option value="">Seleccione un estudiante...</option>
+              {students.map(s => <option key={s.id} value={s.id}>{s.full_name} ({s.id})</option>)}
+            </select>
             <label>Concepto</label>
             <input value={debt.concept} required
               onChange={(e) => setDebt({ ...debt, concept: e.target.value })} />
