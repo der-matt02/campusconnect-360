@@ -119,30 +119,33 @@ export default function Academico() {
       </div>
 
       {detail && (
-        <div className="card">
-          <h3>Ficha: {detail.full_name}</h3>
-          <p className="muted">
-            {detail.id} · {detail.grade} · Colegio {detail.school_id} ·
-            Estado financiero: <strong>{detail.financial_status}</strong>
-          </p>
-          <h4>Matriculas</h4>
-          <table>
-            <thead><tr><th>ID</th><th>Periodo</th><th>Estado</th></tr></thead>
-            <tbody>
-              {detail.enrollments?.map((en) => (
-                <tr key={en.id}><td>{en.id}</td><td>{en.period}</td><td>{en.status}</td></tr>
-              ))}
-            </tbody>
-          </table>
-          <h4>Historial de eventos</h4>
-          <table>
-            <thead><tr><th>Evento</th><th>Resumen</th><th>Correlacion</th></tr></thead>
-            <tbody>
-              {detail.events?.map((ev, i) => (
-                <tr key={i}><td>{ev.event_type}</td><td>{ev.summary}</td><td className="muted">{ev.correlation_id}</td></tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="modal-overlay" onClick={() => setDetail(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setDetail(null)}>&times;</button>
+            <h3 style={{ marginTop: 0 }}>Ficha: {detail.full_name}</h3>
+            <p className="muted">
+              {detail.id} · {detail.grade} · Colegio {detail.school_id} <br/>
+              Estado financiero: <span className={`badge ${detail.financial_status === "AL_DIA" ? "ok" : "warn"}`}>{detail.financial_status}</span>
+            </p>
+            <h4>Matriculas</h4>
+            <table>
+              <thead><tr><th>ID</th><th>Periodo</th><th>Estado</th></tr></thead>
+              <tbody>
+                {detail.enrollments?.map((en) => (
+                  <tr key={en.id}><td>{en.id}</td><td>{en.period}</td><td>{en.status}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <h4>Historial de eventos</h4>
+            <table>
+              <thead><tr><th>Evento</th><th>Resumen</th><th>Correlacion</th></tr></thead>
+              <tbody>
+                {detail.events?.map((ev, i) => (
+                  <tr key={i}><td>{ev.event_type}</td><td>{ev.summary}</td><td className="muted">{ev.correlation_id}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>
