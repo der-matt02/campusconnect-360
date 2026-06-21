@@ -127,3 +127,25 @@ def test_on_message_invalido_va_a_dlq(fake_channel):
     consumer = _build_consumer(lambda e: None)
     consumer._on_message(fake_channel, FakeMethod(9), None, b"esto no es json")
     assert fake_channel.nacks == [(9, False)]
+
+
+def test_connect_with_retry_agota_intentos(monkeypatch):
+    monkeypatch.setattr(m.pika, "BlockingConnection", lambda *a, **k: (_ for _ in ()).throw(m.AMQPConnectionError("siempre cae")))
+    monkeypatch.setattr(m.time, "sleep", lambda *_: None)
+    with pytest.raises(m.AMQPConnectionError):
+        m.connect_with_retry(max_attempts=3)
+
+
+def test_on_message_handler_recupera_en_segundo_intento(fake_channel):
+    intentos = {"n": 0}
+
+    def flaky(event):
+        intentos["n"] += 1
+        if intentos["n"] < 2:
+            raise RuntimeError("fallo transitorio")
+
+    event = Event.create(EventType.PAYMENT_CONFIRMED, {})
+    consumer = _build_consumer(flaky)
+    consumer._on_message(fake_channel, FakeMethod(10), None, event.model_dump_json())
+    assert fake_channel.acks == [10]
+    assert intentos["n"] == 2
