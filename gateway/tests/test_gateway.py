@@ -56,6 +56,20 @@ def test_proxy_servicio_inexistente(client):
     assert resp.status_code == 404
 
 
+def test_proxy_rol_sin_acceso_da_403(client):
+    # secretaria (rol=academico) no puede acceder al servicio de pagos
+    token = token_valido(client)
+    resp = client.get("/api/pagos/payments", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 403
+
+
+def test_proxy_director_accede_analitica(client):
+    resp = client.post("/auth/login", json={"username": "director", "password": "campus123"})
+    token = resp.json()["access_token"]
+    resp = client.get("/api/analitica/dashboard", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+
+
 def test_create_access_token_es_string():
     token = create_access_token("u", "rol", "Nombre")
     assert isinstance(token, str) and len(token) > 10
