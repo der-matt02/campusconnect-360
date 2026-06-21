@@ -25,11 +25,12 @@ def test_event_serializa_y_deserializa():
     assert restored.data["severity"] == "ALTA"
 
 
-def test_existen_los_cuatro_eventos_de_negocio():
+def test_existen_los_eventos_de_negocio():
     tipos = {
         EventType.STUDENT_ENROLLED,
         EventType.PAYMENT_CONFIRMED,
         EventType.ATTENDANCE_RECORDED,
         EventType.INCIDENT_REPORTED,
+        EventType.STUDENT_STATUS_UPDATED,
     }
-    assert len(tipos) == 4
+    assert len(tipos) == 5
