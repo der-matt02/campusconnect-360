@@ -51,5 +51,35 @@ def test_consumidor_idempotente(client):
     assert client.get("/dashboard").json()["matriculados"] == 1
 
 
+def test_dashboard_pagos_pendientes_parciales(client):
+    # 3 matriculados, solo 2 pagos confirmados -> 1 pendiente
+    for i in range(3):
+        _proyectar(EventType.STUDENT_ENROLLED, {"studentId": f"STU-P{i}"})
+    for i in range(2):
+        _proyectar(EventType.PAYMENT_CONFIRMED, {"studentId": f"STU-P{i}", "amount": 100})
+    data = client.get("/dashboard").json()
+    assert data["matriculados"] == 3
+    assert data["pagosConfirmados"] == 2
+    assert data["pagosPendientes"] == 1
+    assert data["montoConfirmado"] == 200.0
+
+
+def test_events_limit_restringe_resultados(client):
+    for i in range(5):
+        _proyectar(EventType.ATTENDANCE_RECORDED, {"studentId": f"STU-L{i}"})
+    assert len(client.get("/events?limit=3").json()) == 3
+    assert len(client.get("/events?limit=1").json()) == 1
+
+
+def test_events_by_type_multiples_tipos(client):
+    _proyectar(EventType.STUDENT_ENROLLED, {"studentId": "STU-BT1"})
+    _proyectar(EventType.PAYMENT_CONFIRMED, {"studentId": "STU-BT1", "amount": 50})
+    _proyectar(EventType.INCIDENT_REPORTED, {"studentId": "STU-BT1"})
+    por_tipo = client.get("/events/by-type").json()
+    assert por_tipo[EventType.STUDENT_ENROLLED] == 1
+    assert por_tipo[EventType.PAYMENT_CONFIRMED] == 1
+    assert por_tipo[EventType.INCIDENT_REPORTED] == 1
+
+
 def test_init_db():
     database.init_db()

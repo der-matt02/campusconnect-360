@@ -6,6 +6,7 @@ os.environ.setdefault("DATABASE_URL", "sqlite://")
 import pytest
 from fastapi.testclient import TestClient
 
+import app.consumer as consumer_module
 import app.main as main_module
 from app.database import Base, engine
 
@@ -15,6 +16,7 @@ def _db(monkeypatch):
     # Crea el esquema en SQLite y evita publicar a RabbitMQ durante las pruebas.
     Base.metadata.create_all(bind=engine)
     monkeypatch.setattr(main_module, "publish_event", lambda event: None)
+    monkeypatch.setattr(consumer_module, "publish_event", lambda event: None)
     yield
     Base.metadata.drop_all(bind=engine)
 

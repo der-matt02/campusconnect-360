@@ -22,6 +22,7 @@ class EventType:
     PAYMENT_CONFIRMED = "PaymentConfirmed"
     ATTENDANCE_RECORDED = "AttendanceRecorded"
     INCIDENT_REPORTED = "IncidentReported"
+    STUDENT_STATUS_UPDATED = "StudentStatusUpdated"
 
 
 def _now_iso() -> str:

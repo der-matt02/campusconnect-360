@@ -1,5 +1,6 @@
 """Pruebas del Servicio de Pagos: endpoints y consumidor."""
 import app.consumer as consumer
+import app.main as main_module
 from app import database, seed
 from conftest import proyectar_estudiante
 
@@ -41,6 +42,29 @@ def test_confirmar_pago(client):
     assert resp.json()["status"] == "CONFIRMADO"
     # Segundo intento: ya confirmado -> 409
     assert client.post(f"/payments/{pago}/confirm").status_code == 409
+
+
+def test_confirmar_pago_publica_evento_con_datos_correctos(client, monkeypatch):
+    publicados = []
+    monkeypatch.setattr(main_module, "publish_event", lambda e: publicados.append(e))
+    proyectar_estudiante("STU-6")
+    pago = client.get("/students/STU-6").json()["payments"][0]["id"]
+    client.post(f"/payments/{pago}/confirm")
+    assert len(publicados) == 1
+    evt = publicados[0]
+    assert evt.eventType == EventType.PAYMENT_CONFIRMED
+    assert evt.data["studentId"] == "STU-6"
+    assert evt.data["paymentId"] == pago
+    assert evt.data["amount"] > 0
+
+
+def test_listar_estudiantes_devuelve_estructura_correcta(client):
+    proyectar_estudiante("STU-7")
+    estudiantes = client.get("/students").json()
+    assert any(e["id"] == "STU-7" for e in estudiantes)
+    stu = next(e for e in estudiantes if e["id"] == "STU-7")
+    assert "payments" in stu
+    assert isinstance(stu["payments"], list)
 
 
 def test_confirmar_pago_inexistente_da_404(client):
