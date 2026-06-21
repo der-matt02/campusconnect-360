@@ -4,7 +4,7 @@
 
 | Patrón | Dónde se evidencia | Archivo |
 |--------|--------------------|---------|
-| **API Gateway** | Entrada única con JWT y enrutamiento | `gateway/app/main.py` |
+| **API Gateway** | Entrada única con JWT, autorización por rol (RBAC) y enrutamiento | `gateway/app/main.py` |
 | **Message Channel** | Exchange topic `campusconnect.events` y colas por servicio | `shared/messaging.py` |
 | **Event Message** | Envoltura común de eventos (eventId, eventType, occurredAt, correlationId, data) | `shared/events.py` |
 | **Publish/Subscribe** | Notificaciones y Analítica consumen el mismo evento | `services/*/app/consumer.py` |
