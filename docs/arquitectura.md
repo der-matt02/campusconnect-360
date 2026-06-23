@@ -64,19 +64,22 @@ Cada servicio tiene su propia base de datos PostgreSQL (persistencia separada).
 ## 5. Diagrama de flujo de eventos
 
 ```
-Académico ──StudentEnrolled──►┌─ Pagos        (crea deuda de matrícula)
-                              ├─ Asistencia   (proyecta estudiante)
-                              ├─ Notificaciones (notifica bienvenida)
-                              └─ Analítica    (proyecta indicador)
+Académico ──StudentEnrolled──────►┌─ Pagos        (crea deuda de matrícula)
+                                  ├─ Asistencia   (proyecta estudiante)
+                                  ├─ Notificaciones (notifica bienvenida)
+                                  └─ Analítica    (proyecta indicador)
 
-Pagos ──────PaymentConfirmed─►┌─ Académico    (estado financiero = AL_DIA)
-                              ├─ Notificaciones
-                              └─ Analítica
+Pagos ──────PaymentConfirmed─────►┌─ Académico    (estado financiero = AL_DIA)
+                                  ├─ Notificaciones
+                                  └─ Analítica
+                                       │
+Académico ──StudentStatusUpdated─►┌─ Notificaciones (notifica cambio de estado)
+(disparado por PaymentConfirmed)  └─ Analítica    (proyecta indicador)
 
-Asistencia ─AttendanceRecorded►┌─ Notificaciones
-                               └─ Analítica
-Asistencia ─IncidentReported──►┌─ Notificaciones
-                               └─ Analítica
+Asistencia ─AttendanceRecorded───►┌─ Notificaciones
+                                  └─ Analítica
+Asistencia ─IncidentReported─────►┌─ Notificaciones
+                                  └─ Analítica
 ```
 
 Un mismo evento es consumido por varios servicios (Publish/Subscribe).
@@ -88,12 +91,12 @@ Un mismo evento es consumido por varios servicios (Publish/Subscribe).
 
 | Servicio | Responsabilidad | Base de datos | Publica | Consume |
 |----------|-----------------|---------------|---------|---------|
-| Gateway | Entrada + JWT + ruteo | — | — | — |
-| Académico | Estudiantes y matrículas | `academico_db` | StudentEnrolled | PaymentConfirmed |
+| Gateway | Entrada + JWT + RBAC + ruteo | — | — | — |
+| Académico | Estudiantes y matrículas | `academico_db` | StudentEnrolled, StudentStatusUpdated | PaymentConfirmed |
 | Pagos | Deudas y pagos | `pagos_db` | PaymentConfirmed | StudentEnrolled |
 | Asistencia | Asistencia e incidentes | `asistencia_db` | AttendanceRecorded, IncidentReported | StudentEnrolled |
-| Notificaciones | Notificaciones simuladas | `notificaciones_db` | — | los 4 eventos |
-| Analítica | Vista de lectura (CQRS) | `analitica_db` | — | los 4 eventos |
+| Notificaciones | Notificaciones simuladas | `notificaciones_db` | — | los 5 eventos |
+| Analítica | Vista de lectura (CQRS) | `analitica_db` | — | los 5 eventos |
 
 ## 7. Contratos de APIs
 
@@ -129,6 +132,7 @@ Estructura común (Event Message):
 | `PaymentConfirmed` | paymentId, studentId, concept, amount |
 | `AttendanceRecorded` | attendanceId, studentId, date, status |
 | `IncidentReported` | incidentId, studentId, severity, description |
+| `StudentStatusUpdated` | studentId, previousStatus, newStatus, triggeredBy |
 
 > Contratos completos con ejemplos y matriz de publicación/consumo:
 > [docs/eventos.md](eventos.md).
@@ -137,7 +141,7 @@ Estructura común (Event Message):
 
 | Patrón | Evidencia |
 |--------|-----------|
-| API Gateway | Servicio `gateway`: entrada única y JWT |
+| API Gateway | Servicio `gateway`: entrada única con JWT, autorización por rol (RBAC) y enrutamiento |
 | Publish/Subscribe | Notificaciones y Analítica consumen el mismo evento |
 | Point-to-Point | Cada cola de servicio tiene un único consumidor |
 | Message Channel | Exchange topic `campusconnect.events` + colas por servicio |
@@ -170,6 +174,16 @@ Estructura común (Event Message):
 - El Gateway emite un **JWT** (HS256) en `/auth/login` con `sub`, `role` y `name`.
 - Todas las rutas `/api/**` exigen `Authorization: Bearer <token>`; sin token
   responden **401**.
+- **Autorización por rol (RBAC)**: el Gateway verifica que el rol del JWT tenga
+  permiso de acceder al servicio destino; si no, responde **403**. Tabla de permisos:
+
+  | Rol | Servicio(s) permitido(s) |
+  |-----|--------------------------|
+  | `academico` | `academico` |
+  | `pagos` | `pagos` |
+  | `docente` | `asistencia` |
+  | `director` | `analitica`, `notificaciones` |
+
 - Usuarios de prueba por rol (secretaría, finanzas, docente, dirección).
 
 ## 12. Resiliencia y manejo de errores
@@ -193,7 +207,7 @@ Estructura común (Event Message):
 
 ### 13.1 Calidad y pruebas
 
-- **84 pruebas automatizadas** (pytest) con **~99% de cobertura** sobre la capa
+- **109 pruebas automatizadas** (pytest) con **~99% de cobertura** sobre la capa
   compartida, los 5 microservicios y el Gateway.
 - Cada microservicio se prueba en aislamiento con **SQLite en memoria** y
   dependencias simuladas (sin RabbitMQ real): endpoints, consumidores,
@@ -217,10 +231,10 @@ Estructura común (Event Message):
 
 ## 16. Mejoras futuras
 
-- Autorización por rol a nivel de Gateway (cada portal solo a su servicio).
-- Hashing de contraseñas e integración con un proveedor de identidad.
+- Hashing de contraseñas e integración con un proveedor de identidad (OAuth2/OIDC).
 - Reintentos con backoff exponencial y reprocesamiento automático de la DLQ.
-- Métricas (Prometheus/Grafana) y trazas distribuidas.
+- Métricas (Prometheus/Grafana) y trazas distribuidas (OpenTelemetry).
+- Rate limiting por usuario/rol en el Gateway.
 
 ## 17. Declaración de uso de IA y recursos externos
 

@@ -2,13 +2,13 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class DebtCreate(BaseModel):
     student_id: str
     concept: str
-    amount: float
+    amount: float = Field(gt=0, description="Monto a cobrar, debe ser mayor a 0")
 
 
 class PaymentOut(BaseModel):

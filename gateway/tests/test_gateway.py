@@ -56,6 +56,53 @@ def test_proxy_servicio_inexistente(client):
     assert resp.status_code == 404
 
 
+def _token(client, username):
+    return client.post(
+        "/auth/login", json={"username": username, "password": "campus123"}
+    ).json()["access_token"]
+
+
+def test_proxy_rol_sin_acceso_da_403(client):
+    # secretaria (rol=academico) no puede acceder al servicio de pagos
+    token = token_valido(client)
+    resp = client.get("/api/pagos/payments", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 403
+
+
+def test_proxy_finanzas_accede_pagos(client):
+    token = _token(client, "finanzas")
+    resp = client.get("/api/pagos/payments", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+
+
+def test_proxy_docente_accede_asistencia(client):
+    token = _token(client, "docente")
+    resp = client.get("/api/asistencia/students", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+
+
+def test_proxy_director_accede_analitica(client):
+    token = _token(client, "director")
+    resp = client.get("/api/analitica/dashboard", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+
+
+def test_proxy_director_accede_notificaciones(client):
+    token = _token(client, "director")
+    resp = client.get("/api/notificaciones/notifications", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 200
+
+
+def test_proxy_finanzas_no_puede_acceder_academico(client):
+    token = _token(client, "finanzas")
+    assert client.get("/api/academico/students", headers={"Authorization": f"Bearer {token}"}).status_code == 403
+
+
+def test_proxy_docente_no_puede_acceder_pagos(client):
+    token = _token(client, "docente")
+    assert client.get("/api/pagos/payments", headers={"Authorization": f"Bearer {token}"}).status_code == 403
+
+
 def test_create_access_token_es_string():
     token = create_access_token("u", "rol", "Nombre")
     assert isinstance(token, str) and len(token) > 10

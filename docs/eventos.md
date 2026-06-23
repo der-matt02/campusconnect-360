@@ -89,6 +89,24 @@ Se publica al registrar una novedad/incidente. Consumido por Notificaciones y An
 }
 ```
 
+### `StudentStatusUpdated`
+Se publica por el Servicio Académico cuando actualiza el estado financiero del
+estudiante al consumir un `PaymentConfirmed`. Propaga el cambio de estado para
+que otros servicios puedan reaccionar. El `correlationId` es el mismo del
+`PaymentConfirmed` que lo originó (cadena de trazabilidad).
+
+```json
+{
+  "eventType": "StudentStatusUpdated",
+  "data": {
+    "studentId": "STU-0001",
+    "previousStatus": "PENDIENTE",
+    "newStatus": "AL_DIA",
+    "triggeredBy": "PaymentConfirmed"
+  }
+}
+```
+
 ## Matriz de publicación / consumo
 
 | Evento | Publica | Consumen |
@@ -97,3 +115,4 @@ Se publica al registrar una novedad/incidente. Consumido por Notificaciones y An
 | `PaymentConfirmed` | Pagos | Académico, Notificaciones, Analítica |
 | `AttendanceRecorded` | Asistencia | Notificaciones, Analítica |
 | `IncidentReported` | Asistencia | Notificaciones, Analítica |
+| `StudentStatusUpdated` | Académico | — (publicado para extensión futura) |

@@ -1,14 +1,15 @@
 """Consumidor de eventos del Servicio Academico.
 
 Escucha PaymentConfirmed para actualizar el estado financiero del estudiante
-(flujo 5.2 de la consigna).
+y publica StudentStatusUpdated para notificar el cambio de estado (flujo 5.2).
 """
 import logging
 import threading
 
 from shared.consuming import make_idempotent_handler
+from shared.enums import FinancialStatus
 from shared.events import Event, EventType
-from shared.messaging import EventConsumer
+from shared.messaging import EventConsumer, publish_event
 
 from .database import SessionLocal
 from .models import ProcessedEvent
@@ -26,7 +27,8 @@ def on_event(db, event: Event) -> None:
     if student is None:
         logger.warning("Estudiante %s no encontrado", event.data.get("studentId"))
         return
-    student.financial_status = "AL_DIA"
+    estado_anterior = student.financial_status
+    student.financial_status = FinancialStatus.AL_DIA
     add_event(
         db,
         student_id=student.id,
@@ -35,6 +37,18 @@ def on_event(db, event: Event) -> None:
         summary=f"Pago confirmado por {event.data.get('amount')}",
     )
     logger.info("Estado financiero actualizado para %s", student.id)
+
+    status_event = Event.create(
+        EventType.STUDENT_STATUS_UPDATED,
+        data={
+            "studentId": student.id,
+            "previousStatus": estado_anterior,
+            "newStatus": "AL_DIA",
+            "triggeredBy": event.eventType,
+        },
+        correlation_id=event.correlationId,
+    )
+    publish_event(status_event)
 
 
 handle_event = make_idempotent_handler(

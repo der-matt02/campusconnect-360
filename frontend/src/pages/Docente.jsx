@@ -55,9 +55,11 @@ export default function Docente() {
         <div className="card">
           <h3>Registrar asistencia</h3>
           <form onSubmit={registerAtt}>
-            <label>ID del estudiante</label>
-            <input value={att.student_id} required
-              onChange={(e) => setAtt({ ...att, student_id: e.target.value })} />
+            <label>Estudiante</label>
+            <select value={att.student_id} required onChange={(e) => setAtt({ ...att, student_id: e.target.value })}>
+              <option value="">Seleccione un estudiante...</option>
+              {students.map(s => <option key={s.id} value={s.id}>{s.full_name} ({s.id})</option>)}
+            </select>
             <label>Fecha</label>
             <input value={att.date} onChange={(e) => setAtt({ ...att, date: e.target.value })} />
             <label>Estado</label>
@@ -71,9 +73,11 @@ export default function Docente() {
         <div className="card">
           <h3>Registrar incidente / novedad</h3>
           <form onSubmit={registerInc}>
-            <label>ID del estudiante</label>
-            <input value={inc.student_id} required
-              onChange={(e) => setInc({ ...inc, student_id: e.target.value })} />
+            <label>Estudiante</label>
+            <select value={inc.student_id} required onChange={(e) => setInc({ ...inc, student_id: e.target.value })}>
+              <option value="">Seleccione un estudiante...</option>
+              {students.map(s => <option key={s.id} value={s.id}>{s.full_name} ({s.id})</option>)}
+            </select>
             <label>Severidad</label>
             <select value={inc.severity} onChange={(e) => setInc({ ...inc, severity: e.target.value })}>
               <option>BAJA</option><option>MEDIA</option><option>ALTA</option>
@@ -102,26 +106,29 @@ export default function Docente() {
       </div>
 
       {history && (
-        <div className="card">
-          <h3>Historial de {history.id}</h3>
-          <h4>Asistencia</h4>
-          <table>
-            <thead><tr><th>Fecha</th><th>Estado</th></tr></thead>
-            <tbody>
-              {history.attendance.map((a) => (
-                <tr key={a.id}><td>{a.date}</td><td>{a.status}</td></tr>
-              ))}
-            </tbody>
-          </table>
-          <h4>Incidentes</h4>
-          <table>
-            <thead><tr><th>Severidad</th><th>Descripcion</th></tr></thead>
-            <tbody>
-              {history.incidents.map((i) => (
-                <tr key={i.id}><td>{i.severity}</td><td>{i.description}</td></tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="modal-overlay" onClick={() => setHistory(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setHistory(null)}>&times;</button>
+            <h3 style={{ marginTop: 0 }}>Historial de {history.id}</h3>
+            <h4>Asistencia</h4>
+            <table>
+              <thead><tr><th>Fecha</th><th>Estado</th></tr></thead>
+              <tbody>
+                {history.attendance.map((a) => (
+                  <tr key={a.id}><td>{a.date}</td><td>{a.status}</td></tr>
+                ))}
+              </tbody>
+            </table>
+            <h4>Incidentes</h4>
+            <table>
+              <thead><tr><th>Severidad</th><th>Descripcion</th></tr></thead>
+              <tbody>
+                {history.incidents.map((i) => (
+                  <tr key={i.id}><td>{i.severity}</td><td>{i.description}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

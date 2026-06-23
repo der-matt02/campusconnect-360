@@ -56,6 +56,32 @@ def test_consumidor_ignora_otros_eventos(client):
     assert not any(e["id"] == "X" for e in client.get("/students").json())
 
 
+def test_historial_asistencia_vacio(client):
+    proyectar_estudiante("STU-7")
+    assert client.get("/students/STU-7/attendance").json() == []
+
+
+def test_historial_incidentes_vacio(client):
+    proyectar_estudiante("STU-8")
+    assert client.get("/students/STU-8/incidents").json() == []
+
+
+def test_normaliza_status_asistencia_a_mayusculas(client):
+    proyectar_estudiante("STU-10")
+    for valor in ("presente", "PRESENTE", "Presente"):
+        resp = client.post("/attendance", json={"student_id": "STU-10", "date": "2026-06-15", "status": valor})
+        assert resp.status_code == 201
+        assert resp.json()["status"] == "PRESENTE"
+
+
+def test_normaliza_severity_incidente_a_mayusculas(client):
+    proyectar_estudiante("STU-11")
+    for valor in ("alta", "ALTA", "Alta"):
+        resp = client.post("/incidents", json={"student_id": "STU-11", "severity": valor, "description": "x"})
+        assert resp.status_code == 201
+        assert resp.json()["severity"] == "ALTA"
+
+
 def test_init_db_y_seed():
     database.init_db()
     seed.seed_data()

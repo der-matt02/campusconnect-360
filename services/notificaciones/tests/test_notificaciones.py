@@ -64,5 +64,43 @@ def test_translator_tipo_desconocido():
     assert "OtroEvento" in msg
 
 
+def test_consumidor_payment_confirmed_genera_notificacion(client):
+    consumer.handle_event(_evento(
+        EventType.PAYMENT_CONFIRMED,
+        {"studentId": "STU-2", "amount": 150, "concept": "Matricula 2026-1"},
+    ))
+    notifs = client.get("/notifications").json()
+    assert len(notifs) == 1
+    assert "pago" in notifs[0]["message"].lower()
+
+
+def test_consumidor_incident_reported_genera_notificacion(client):
+    consumer.handle_event(_evento(
+        EventType.INCIDENT_REPORTED,
+        {"studentId": "STU-3", "severity": "ALTA", "description": "Conducta disruptiva"},
+    ))
+    notifs = client.get("/notifications").json()
+    assert any("novedad" in n["message"].lower() for n in notifs)
+
+
+def test_consumidor_idempotente(client):
+    evento = _evento(EventType.STUDENT_ENROLLED, {
+        "studentId": "STU-4", "fullName": "X", "enrollmentId": "ENR-X", "period": "2026-1",
+    })
+    consumer.handle_event(evento)
+    consumer.handle_event(evento)
+    assert len(client.get("/notifications").json()) == 1
+
+
+def test_notificaciones_almacenan_student_id_y_tipo(client):
+    consumer.handle_event(_evento(
+        EventType.ATTENDANCE_RECORDED,
+        {"studentId": "STU-5", "date": "2026-06-12", "status": "PRESENTE"},
+    ))
+    notifs = client.get("/notifications").json()
+    assert notifs[0]["studentId"] == "STU-5"
+    assert notifs[0]["eventType"] == EventType.ATTENDANCE_RECORDED
+
+
 def test_init_db():
     database.init_db()

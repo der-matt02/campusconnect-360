@@ -48,10 +48,46 @@ def test_matricula_estudiante_inexistente_da_404(client):
     assert client.post("/enrollments", json={"student_id": "NOPE", "period": "x"}).status_code == 404
 
 
+def test_matricula_periodo_duplicado_da_409(client):
+    sid = nuevo_estudiante(client)
+    client.post("/enrollments", json={"student_id": sid, "period": "2026-1"})
+    resp = client.post("/enrollments", json={"student_id": sid, "period": "2026-1"})
+    assert resp.status_code == 409
+
+
+def test_matricula_periodos_distintos_permitidos(client):
+    sid = nuevo_estudiante(client)
+    assert client.post("/enrollments", json={"student_id": sid, "period": "2026-1"}).status_code == 201
+    assert client.post("/enrollments", json={"student_id": sid, "period": "2026-2"}).status_code == 201
+
+
+def test_ficha_incluye_matriculas_y_eventos(client):
+    sid = nuevo_estudiante(client)
+    client.post("/enrollments", json={"student_id": sid, "period": "2026-1"})
+    consumer.handle_event(Event.create(EventType.PAYMENT_CONFIRMED, {"studentId": sid, "amount": 300}))
+    ficha = client.get(f"/students/{sid}").json()
+    assert len(ficha["enrollments"]) == 1
+    assert ficha["financial_status"] == "AL_DIA"
+    tipos = {e["event_type"] for e in ficha["events"]}
+    assert EventType.STUDENT_ENROLLED in tipos
+    assert EventType.PAYMENT_CONFIRMED in tipos
+
+
 def test_consumidor_actualiza_estado_financiero(client):
     sid = nuevo_estudiante(client)
     consumer.handle_event(Event.create(EventType.PAYMENT_CONFIRMED, {"studentId": sid, "amount": 250}))
     assert client.get(f"/students/{sid}").json()["financial_status"] == "AL_DIA"
+
+
+def test_consumidor_publica_student_status_updated(client, monkeypatch):
+    publicados = []
+    monkeypatch.setattr(consumer, "publish_event", lambda e: publicados.append(e))
+    sid = nuevo_estudiante(client)
+    consumer.handle_event(Event.create(EventType.PAYMENT_CONFIRMED, {"studentId": sid, "amount": 250}))
+    assert any(e.eventType == EventType.STUDENT_STATUS_UPDATED for e in publicados)
+    evt = next(e for e in publicados if e.eventType == EventType.STUDENT_STATUS_UPDATED)
+    assert evt.data["newStatus"] == "AL_DIA"
+    assert evt.data["previousStatus"] == "PENDIENTE"
 
 
 def test_consumidor_ignora_otros_eventos(client):

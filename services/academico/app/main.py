@@ -5,7 +5,7 @@ Publica el evento StudentEnrolled y consume PaymentConfirmed.
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 
 from shared.events import Event, EventType
@@ -49,10 +49,10 @@ def health():
     return {"status": "ok", "service": "academico"}
 
 
-@app.post("/students", response_model=StudentOut, status_code=201, tags=["estudiantes"])
+@app.post("/students", response_model=StudentOut, status_code=status.HTTP_201_CREATED, tags=["estudiantes"])
 def create_student(payload: StudentCreate, db: Session = Depends(get_db)):
     if repo.find_by_document(db, payload.document_id):
-        raise HTTPException(409, "Ya existe un estudiante con ese documento")
+        raise HTTPException(status.HTTP_409_CONFLICT, "Ya existe un estudiante con ese documento")
     return repo.create_student(db, payload.model_dump())
 
 
@@ -65,7 +65,7 @@ def list_students(db: Session = Depends(get_db)):
 def get_student(student_id: str, db: Session = Depends(get_db)):
     student = repo.get_student(db, student_id)
     if student is None:
-        raise HTTPException(404, "Estudiante no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Estudiante no encontrado")
     return student
 
 
@@ -76,16 +76,19 @@ def get_student(student_id: str, db: Session = Depends(get_db)):
 )
 def get_student_events(student_id: str, db: Session = Depends(get_db)):
     if repo.get_student(db, student_id) is None:
-        raise HTTPException(404, "Estudiante no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Estudiante no encontrado")
     return repo.list_events(db, student_id)
 
 
-@app.post("/enrollments", response_model=EnrollmentOut, status_code=201, tags=["matriculas"])
+@app.post("/enrollments", response_model=EnrollmentOut, status_code=status.HTTP_201_CREATED, tags=["matriculas"])
 def create_enrollment(payload: EnrollmentCreate, db: Session = Depends(get_db)):
     """Crea una matricula y publica el evento StudentEnrolled."""
     student = repo.get_student(db, payload.student_id)
     if student is None:
-        raise HTTPException(404, "Estudiante no encontrado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Estudiante no encontrado")
+
+    if any(enr.period == payload.period for enr in student.enrollments):
+        raise HTTPException(status.HTTP_409_CONFLICT, f"El estudiante ya está matriculado en el periodo {payload.period}")
 
     enrollment = repo.create_enrollment(db, payload.student_id, payload.period)
 

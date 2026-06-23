@@ -1,16 +1,13 @@
 """Modelos del Servicio de Asistencia/Bienestar."""
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from shared.idempotency import ProcessedEventMixin
+from shared.utils import utcnow
 
 from .database import Base
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 class ProcessedEvent(Base, ProcessedEventMixin):
@@ -28,7 +25,7 @@ class StudentRef(Base):
     full_name: Mapped[str] = mapped_column(String, nullable=False)
     school_id: Mapped[str] = mapped_column(String, nullable=True)
     grade: Mapped[str] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class Attendance(Base):
@@ -40,7 +37,7 @@ class Attendance(Base):
     student_id: Mapped[str] = mapped_column(ForeignKey("student_refs.id"), nullable=False)
     date: Mapped[str] = mapped_column(String, nullable=False)  # YYYY-MM-DD
     status: Mapped[str] = mapped_column(String, nullable=False)  # PRESENTE | AUSENTE | TARDE
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class Incident(Base):
@@ -52,4 +49,4 @@ class Incident(Base):
     student_id: Mapped[str] = mapped_column(ForeignKey("student_refs.id"), nullable=False)
     severity: Mapped[str] = mapped_column(String, nullable=False)  # BAJA | MEDIA | ALTA
     description: Mapped[str] = mapped_column(String, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

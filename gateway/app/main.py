@@ -2,6 +2,7 @@
 
 Punto de entrada centralizado al ecosistema (patron API Gateway):
   - Autenticacion: emite y valida JWT.
+  - Autorizacion: cada rol solo puede acceder a los servicios de su portal.
   - Enrutamiento: reenvia las peticiones a los microservicios.
   - Health agregado: estado de todos los servicios.
 """
@@ -27,6 +28,14 @@ SERVICES = {
     "notificaciones": os.getenv("NOTIFICACIONES_URL", "http://notificaciones:8003"),
     "asistencia": os.getenv("ASISTENCIA_URL", "http://asistencia:8004"),
     "analitica": os.getenv("ANALITICA_URL", "http://analitica:8005"),
+}
+
+# Autorizacion por rol: cada rol solo puede enrutar hacia los servicios de su portal.
+ROLE_PERMISSIONS: dict[str, set[str]] = {
+    "academico": {"academico"},
+    "pagos":     {"pagos"},
+    "docente":   {"asistencia"},
+    "director":  {"analitica", "notificaciones"},
 }
 
 app = FastAPI(
@@ -99,6 +108,11 @@ async def proxy(service: str, path: str, request: Request, current=Depends(get_c
     base_url = SERVICES.get(service)
     if base_url is None:
         raise HTTPException(404, f"Servicio '{service}' no existe")
+
+    role = current.get("role", "")
+    if service not in ROLE_PERMISSIONS.get(role, set()):
+        logger.warning("Acceso denegado: rol '%s' -> servicio '%s'", role, service)
+        raise HTTPException(403, f"El rol '{role}' no tiene acceso al servicio '{service}'")
 
     target = f"{base_url}/{path}"
     body = await request.body()
