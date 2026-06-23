@@ -1,18 +1,14 @@
 """Patron Repository: acceso a datos del Servicio de Pagos."""
 from __future__ import annotations
 
-import uuid
 from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
 from shared.enums import PaymentStatus
+from shared.utils import new_id
 
 from .models import Payment, StudentRef
-
-
-def _new_id(prefix: str) -> str:
-    return f"{prefix}-{uuid.uuid4().hex[:8]}"
 
 
 def list_students(db: Session) -> list[StudentRef]:
@@ -29,7 +25,7 @@ def ensure_student(db: Session, student_id: str, full_name: str, school_id: str,
 
 
 def add_payment(db: Session, student_id: str, concept: str, amount: float) -> Payment:
-    payment = Payment(id=_new_id("PAY"), student_id=student_id, concept=concept, amount=amount)
+    payment = Payment(id=new_id("PAY"), student_id=student_id, concept=concept, amount=amount)
     db.add(payment)
     return payment
 

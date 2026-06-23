@@ -1,16 +1,13 @@
 """Modelos del Servicio de Notificaciones."""
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from shared.idempotency import ProcessedEventMixin
+from shared.utils import utcnow
 
 from .database import Base
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 class ProcessedEvent(Base, ProcessedEventMixin):
@@ -32,4 +29,4 @@ class Notification(Base):
     message: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, default="ENVIADA")  # ENVIADA | FALLIDA
     correlation_id: Mapped[str] = mapped_column(String, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

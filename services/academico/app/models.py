@@ -1,17 +1,14 @@
 """Modelos de datos del Servicio Academico."""
-from datetime import datetime, timezone
+from datetime import datetime
 
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from shared.enums import EnrollmentStatus, FinancialStatus
 from shared.idempotency import ProcessedEventMixin
+from shared.utils import utcnow
 
 from .database import Base
-
-
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
 
 
 class ProcessedEvent(Base, ProcessedEventMixin):
@@ -31,7 +28,7 @@ class Student(Base):
     grade: Mapped[str] = mapped_column(String, nullable=False)
     # Estado financiero consolidado (se actualiza al consumir PaymentConfirmed).
     financial_status: Mapped[str] = mapped_column(String, default=FinancialStatus.PENDIENTE)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     enrollments: Mapped[list["Enrollment"]] = relationship(
         back_populates="student", cascade="all, delete-orphan"
@@ -48,7 +45,7 @@ class Enrollment(Base):
     student_id: Mapped[str] = mapped_column(ForeignKey("students.id"), nullable=False)
     period: Mapped[str] = mapped_column(String, nullable=False)
     status: Mapped[str] = mapped_column(String, default=EnrollmentStatus.ACTIVA)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     student: Mapped["Student"] = relationship(back_populates="enrollments")
 
@@ -63,6 +60,6 @@ class StudentEvent(Base):
     event_type: Mapped[str] = mapped_column(String, nullable=False)
     correlation_id: Mapped[str] = mapped_column(String, nullable=True)
     summary: Mapped[str] = mapped_column(String, nullable=True)
-    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
     student: Mapped["Student"] = relationship(back_populates="events")
