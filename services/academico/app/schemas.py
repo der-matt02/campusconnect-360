@@ -2,13 +2,13 @@
 from datetime import datetime
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 class StudentCreate(BaseModel):
     full_name: str
     document_id: str
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
     school_id: str
     grade: str
 
