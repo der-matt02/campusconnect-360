@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from sqlalchemy import DateTime, ForeignKey, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from shared.enums import EnrollmentStatus, FinancialStatus
 from shared.idempotency import ProcessedEventMixin
 
 from .database import Base
@@ -29,7 +30,7 @@ class Student(Base):
     school_id: Mapped[str] = mapped_column(String, nullable=False)
     grade: Mapped[str] = mapped_column(String, nullable=False)
     # Estado financiero consolidado (se actualiza al consumir PaymentConfirmed).
-    financial_status: Mapped[str] = mapped_column(String, default="PENDIENTE")
+    financial_status: Mapped[str] = mapped_column(String, default=FinancialStatus.PENDIENTE)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     enrollments: Mapped[list["Enrollment"]] = relationship(
@@ -46,7 +47,7 @@ class Enrollment(Base):
     id: Mapped[str] = mapped_column(String, primary_key=True)
     student_id: Mapped[str] = mapped_column(ForeignKey("students.id"), nullable=False)
     period: Mapped[str] = mapped_column(String, nullable=False)
-    status: Mapped[str] = mapped_column(String, default="ACTIVA")
+    status: Mapped[str] = mapped_column(String, default=EnrollmentStatus.ACTIVA)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
 
     student: Mapped["Student"] = relationship(back_populates="enrollments")

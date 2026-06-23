@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from sqlalchemy import DateTime, Float, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from shared.enums import PaymentStatus
 from shared.idempotency import ProcessedEventMixin
 
 from .database import Base
@@ -47,7 +48,7 @@ class Payment(Base):
     student_id: Mapped[str] = mapped_column(ForeignKey("student_refs.id"), nullable=False)
     concept: Mapped[str] = mapped_column(String, nullable=False)
     amount: Mapped[float] = mapped_column(Float, nullable=False)
-    status: Mapped[str] = mapped_column(String, default="PENDIENTE")  # PENDIENTE | CONFIRMADO
+    status: Mapped[str] = mapped_column(String, default=PaymentStatus.PENDIENTE)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_utcnow)
     confirmed_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=True)
 

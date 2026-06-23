@@ -9,6 +9,7 @@ from typing import Optional
 from fastapi import Depends, FastAPI, HTTPException, Query
 from sqlalchemy.orm import Session
 
+from shared.enums import PaymentStatus
 from shared.events import Event, EventType
 from shared.messaging import publish_event
 
@@ -82,7 +83,7 @@ def confirm_payment(payment_id: str, db: Session = Depends(get_db)):
     payment = repo.get_payment(db, payment_id)
     if payment is None:
         raise HTTPException(404, "Pago no encontrado")
-    if payment.status == "CONFIRMADO":
+    if payment.status == PaymentStatus.CONFIRMADO:
         raise HTTPException(409, "El pago ya estaba confirmado")
 
     repo.mark_confirmed(db, payment)

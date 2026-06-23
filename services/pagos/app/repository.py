@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 
 from sqlalchemy.orm import Session
 
+from shared.enums import PaymentStatus
+
 from .models import Payment, StudentRef
 
 
@@ -44,5 +46,5 @@ def list_payments(db: Session, status: str | None = None) -> list[Payment]:
 
 
 def mark_confirmed(db: Session, payment: Payment) -> None:
-    payment.status = "CONFIRMADO"
+    payment.status = PaymentStatus.CONFIRMADO
     payment.confirmed_at = datetime.now(timezone.utc)

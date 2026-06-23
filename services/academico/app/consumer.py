@@ -7,6 +7,7 @@ import logging
 import threading
 
 from shared.consuming import make_idempotent_handler
+from shared.enums import FinancialStatus
 from shared.events import Event, EventType
 from shared.messaging import EventConsumer, publish_event
 
@@ -27,7 +28,7 @@ def on_event(db, event: Event) -> None:
         logger.warning("Estudiante %s no encontrado", event.data.get("studentId"))
         return
     estado_anterior = student.financial_status
-    student.financial_status = "AL_DIA"
+    student.financial_status = FinancialStatus.AL_DIA
     add_event(
         db,
         student_id=student.id,
