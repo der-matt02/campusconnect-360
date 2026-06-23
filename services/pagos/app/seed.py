@@ -7,6 +7,8 @@ una deuda pendiente para poder demostrar la confirmacion de pago de inmediato.
 import logging
 import uuid
 
+from shared.enums import PaymentStatus
+
 from .database import SessionLocal
 from .models import Payment, StudentRef
 
@@ -31,7 +33,7 @@ def seed_data() -> None:
                 student_id="STU-0001",
                 concept="Matricula periodo 2026-1",
                 amount=250.0,
-                status="PENDIENTE",
+                status=PaymentStatus.PENDIENTE,
             )
         )
         db.commit()

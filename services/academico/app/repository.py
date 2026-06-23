@@ -5,15 +5,11 @@ consumidores), facilitando pruebas y mantenimiento.
 """
 from __future__ import annotations
 
-import uuid
-
 from sqlalchemy.orm import Session
 
+from shared.utils import new_id
+
 from .models import Enrollment, Student, StudentEvent
-
-
-def _new_id(prefix: str) -> str:
-    return f"{prefix}-{uuid.uuid4().hex[:8]}"
 
 
 def list_students(db: Session) -> list[Student]:
@@ -29,7 +25,7 @@ def find_by_document(db: Session, document_id: str) -> Student | None:
 
 
 def create_student(db: Session, data: dict) -> Student:
-    student = Student(id=_new_id("STU"), **data)
+    student = Student(id=new_id("STU"), **data)
     db.add(student)
     db.commit()
     db.refresh(student)
@@ -37,7 +33,7 @@ def create_student(db: Session, data: dict) -> Student:
 
 
 def create_enrollment(db: Session, student_id: str, period: str) -> Enrollment:
-    enrollment = Enrollment(id=_new_id("ENR"), student_id=student_id, period=period)
+    enrollment = Enrollment(id=new_id("ENR"), student_id=student_id, period=period)
     db.add(enrollment)
     return enrollment
 

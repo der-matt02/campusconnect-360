@@ -6,9 +6,10 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Optional
 
-from fastapi import Depends, FastAPI, HTTPException, Query
+from fastapi import Depends, FastAPI, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
+from shared.enums import PaymentStatus
 from shared.events import Event, EventType
 from shared.messaging import publish_event
 
@@ -53,15 +54,15 @@ def list_students(db: Session = Depends(get_db)):
 def get_student(student_id: str, db: Session = Depends(get_db)):
     student = repo.get_student(db, student_id)
     if student is None:
-        raise HTTPException(404, "Estudiante no encontrado en el modulo de pagos")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Estudiante no encontrado en el modulo de pagos")
     return student
 
 
-@app.post("/debts", response_model=PaymentOut, status_code=201, tags=["pagos"])
+@app.post("/debts", response_model=PaymentOut, status_code=status.HTTP_201_CREATED, tags=["pagos"])
 def create_debt(payload: DebtCreate, db: Session = Depends(get_db)):
     """Registra una obligacion de pago (o simula una deuda)."""
     if repo.get_student(db, payload.student_id) is None:
-        raise HTTPException(404, "Estudiante no encontrado en el modulo de pagos")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Estudiante no encontrado en el modulo de pagos")
     payment = repo.add_payment(db, payload.student_id, payload.concept, payload.amount)
     db.commit()
     db.refresh(payment)
@@ -81,9 +82,9 @@ def confirm_payment(payment_id: str, db: Session = Depends(get_db)):
     """Confirma un pago y publica el evento PaymentConfirmed."""
     payment = repo.get_payment(db, payment_id)
     if payment is None:
-        raise HTTPException(404, "Pago no encontrado")
-    if payment.status == "CONFIRMADO":
-        raise HTTPException(409, "El pago ya estaba confirmado")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Pago no encontrado")
+    if payment.status == PaymentStatus.CONFIRMADO:
+        raise HTTPException(status.HTTP_409_CONFLICT, "El pago ya estaba confirmado")
 
     repo.mark_confirmed(db, payment)
     event = Event.create(

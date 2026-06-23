@@ -6,7 +6,7 @@ IncidentReported. Consume StudentEnrolled para proyectar estudiantes.
 import logging
 from contextlib import asynccontextmanager
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, status
 from sqlalchemy.orm import Session
 
 from shared.events import Event, EventType
@@ -54,11 +54,11 @@ def list_students(db: Session = Depends(get_db)):
     return repo.list_students(db)
 
 
-@app.post("/attendance", response_model=AttendanceOut, status_code=201, tags=["asistencia"])
+@app.post("/attendance", response_model=AttendanceOut, status_code=status.HTTP_201_CREATED, tags=["asistencia"])
 def register_attendance(payload: AttendanceCreate, db: Session = Depends(get_db)):
     """Registra asistencia y publica AttendanceRecorded."""
     if repo.get_student(db, payload.student_id) is None:
-        raise HTTPException(404, "Estudiante no encontrado en el modulo de asistencia")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Estudiante no encontrado en el modulo de asistencia")
 
     record = repo.add_attendance(db, payload.student_id, payload.date, payload.status)
     event = Event.create(
@@ -77,11 +77,11 @@ def register_attendance(payload: AttendanceCreate, db: Session = Depends(get_db)
     return record
 
 
-@app.post("/incidents", response_model=IncidentOut, status_code=201, tags=["incidentes"])
+@app.post("/incidents", response_model=IncidentOut, status_code=status.HTTP_201_CREATED, tags=["incidentes"])
 def register_incident(payload: IncidentCreate, db: Session = Depends(get_db)):
     """Registra un incidente/novedad y publica IncidentReported."""
     if repo.get_student(db, payload.student_id) is None:
-        raise HTTPException(404, "Estudiante no encontrado en el modulo de asistencia")
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Estudiante no encontrado en el modulo de asistencia")
 
     incident = repo.add_incident(db, payload.student_id, payload.severity, payload.description)
     event = Event.create(

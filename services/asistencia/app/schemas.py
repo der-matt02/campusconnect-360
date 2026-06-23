@@ -2,7 +2,9 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from shared.enums import AttendanceStatus, IncidentSeverity
 
 
 class StudentOut(BaseModel):
@@ -17,7 +19,12 @@ class StudentOut(BaseModel):
 class AttendanceCreate(BaseModel):
     student_id: str
     date: str = Field(..., description="Fecha en formato YYYY-MM-DD")
-    status: str = Field(..., description="PRESENTE | AUSENTE | TARDE")
+    status: AttendanceStatus
+
+    @field_validator("status", mode="before")
+    @classmethod
+    def normalize_status(cls, v: str) -> str:
+        return v.upper() if isinstance(v, str) else v
 
 
 class AttendanceOut(BaseModel):
@@ -32,8 +39,13 @@ class AttendanceOut(BaseModel):
 
 class IncidentCreate(BaseModel):
     student_id: str
-    severity: str = Field(..., description="BAJA | MEDIA | ALTA")
+    severity: IncidentSeverity
     description: str
+
+    @field_validator("severity", mode="before")
+    @classmethod
+    def normalize_severity(cls, v: str) -> str:
+        return v.upper() if isinstance(v, str) else v
 
 
 class IncidentOut(BaseModel):

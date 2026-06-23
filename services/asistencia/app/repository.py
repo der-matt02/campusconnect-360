@@ -1,15 +1,11 @@
 """Patron Repository: acceso a datos del Servicio de Asistencia/Bienestar."""
 from __future__ import annotations
 
-import uuid
-
 from sqlalchemy.orm import Session
 
+from shared.utils import new_id
+
 from .models import Attendance, Incident, StudentRef
-
-
-def _new_id(prefix: str) -> str:
-    return f"{prefix}-{uuid.uuid4().hex[:8]}"
 
 
 def list_students(db: Session) -> list[StudentRef]:
@@ -26,14 +22,14 @@ def ensure_student(db: Session, student_id: str, full_name: str, school_id: str,
 
 
 def add_attendance(db: Session, student_id: str, date: str, status: str) -> Attendance:
-    record = Attendance(id=_new_id("ATT"), student_id=student_id, date=date, status=status.upper())
+    record = Attendance(id=new_id("ATT"), student_id=student_id, date=date, status=status.upper())
     db.add(record)
     return record
 
 
 def add_incident(db: Session, student_id: str, severity: str, description: str) -> Incident:
     incident = Incident(
-        id=_new_id("INC"), student_id=student_id, severity=severity.upper(), description=description
+        id=new_id("INC"), student_id=student_id, severity=severity.upper(), description=description
     )
     db.add(incident)
     return incident
