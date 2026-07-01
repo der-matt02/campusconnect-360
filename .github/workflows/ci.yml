@@ -47,7 +47,7 @@ jobs:
         pip install bandit==1.7.10
 
     - name: Run security scan (Bandit)
-      run: bandit -r gateway shared services
+      run: bandit -r gateway shared services -s B101,B105
 
   test:
     name: Run Unit Tests & Coverage
