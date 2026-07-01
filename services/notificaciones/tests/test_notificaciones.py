@@ -1,7 +1,6 @@
 """Pruebas del Servicio de Notificaciones: consumidor, translator y resiliencia."""
-import pytest
-
 import app.consumer as consumer
+import pytest
 from app import database
 from app.translator import translate
 

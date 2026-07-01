@@ -5,26 +5,26 @@ Ejecuta el flujo completo a través del API Gateway con JWT y realiza validacion
 Multiplataforma: Funciona en Windows, macOS y Linux sin requerir dependencias externas.
 """
 import json
-import time
-import urllib.request
-import urllib.error
 import sys
+import time
+import urllib.error
+import urllib.request
 
 GATEWAY = "http://localhost:8000"
 
 def request_json(url, method="GET", data=None, headers=None):
     if headers is None:
         headers = {}
-    
+
     req_headers = {"Content-Type": "application/json"}
     req_headers.update(headers)
-    
+
     req_data = None
     if data is not None:
         req_data = json.dumps(data).encode("utf-8")
-        
+
     req = urllib.request.Request(url, data=req_data, headers=req_headers, method=method)
-    
+
     try:
         with urllib.request.urlopen(req) as response:
             status = response.getcode()
@@ -39,7 +39,7 @@ def request_json(url, method="GET", data=None, headers=None):
             try:
                 err_json = json.loads(resp_body)
                 err_msg += f" - {err_json}"
-            except:
+            except Exception:
                 err_msg += f" - {resp_body}"
         print(f"Error en petición a {url}: {err_msg}")
         sys.exit(1)
@@ -74,7 +74,7 @@ def main():
     token_fin = login("finanzas")
     token_doc = login("docente")
     token_dir = login("director")
-    
+
     auth_sec = {"Authorization": f"Bearer {token_sec}"}
     auth_fin = {"Authorization": f"Bearer {token_fin}"}
     auth_doc = {"Authorization": f"Bearer {token_doc}"}
@@ -118,7 +118,7 @@ def main():
     assert len(payments) > 0, "No se generó el pago correspondiente"
     payment_id = payments[0]["id"]
     print(f"✓ Deuda autodetectada. ID de Pago: {payment_id}. Confirmando pago...")
-    
+
     status, _ = request_json(f"{GATEWAY}/api/pagos/payments/{payment_id}/confirm", "POST", headers=auth_fin)
     assert status == 200, "Error al confirmar el pago"
     print("✓ Pago confirmado. Esperando 3 segundos para la propagación del estado...")
@@ -143,7 +143,7 @@ def main():
     }
     status, _ = request_json(f"{GATEWAY}/api/asistencia/attendance", "POST", attendance_payload, auth_doc)
     assert status == 201, "Error al registrar asistencia"
-    
+
     incident_payload = {
         "student_id": student_id,
         "severity": "BAJA",
@@ -168,7 +168,7 @@ def main():
     status, _ = request_json(f"{GATEWAY}/api/notificaciones/chaos", "POST", {"enabled": True}, auth_dir)
     assert status == 200, "Error al activar el modo caos"
     print("✓ Modo Caos activado en el servicio de Notificaciones.")
-    
+
     # El docente genera una nueva asistencia para forzar un fallo al notificar
     attendance_payload_fail = {
         "student_id": student_id,
@@ -180,7 +180,7 @@ def main():
     print("✓ Nueva asistencia generada bajo fallo simulado.")
     print("Esperando 9 segundos para que se completen los 3 reintentos y el evento caiga en la DLQ...")
     time.sleep(9)
-    
+
     # Comprobar la profundidad de la DLQ
     status, dlq_info = request_json(f"{GATEWAY}/api/notificaciones/dlq", "GET", headers=auth_dir)
     assert status == 200
@@ -195,13 +195,13 @@ def main():
     status, _ = request_json(f"{GATEWAY}/api/notificaciones/chaos", "POST", {"enabled": False}, auth_dir)
     assert status == 200, "Error al desactivar el modo caos"
     print("✓ Modo Caos desactivado.")
-    
+
     # Lanzar el reprocesamiento manual de la DLQ
     status, reprocess_result = request_json(f"{GATEWAY}/api/notificaciones/dlq/reprocess", "POST", headers=auth_dir)
     assert status == 200, "Error al reprocesar DLQ"
     print("✓ Petición de reprocesamiento completada:")
     print(json.dumps(reprocess_result, indent=2, ensure_ascii=False))
-    
+
     # Comprobar que la DLQ se vació
     status, dlq_info_after = request_json(f"{GATEWAY}/api/notificaciones/dlq", "GET", headers=auth_dir)
     assert status == 200
@@ -214,7 +214,7 @@ def main():
     status, health = request_json(f"{GATEWAY}/health", "GET")
     assert status == 200
     print(json.dumps(health, indent=2, ensure_ascii=False))
-    
+
     print("\n" + "=" * 60)
     print(" ✓✓ DEMOSTRACIÓN COMPLETADA Y VERIFICADA EXITOSAMENTE ✓✓")
     print("=" * 60)
