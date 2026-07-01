@@ -2,13 +2,13 @@ name: Continuous Integration
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feat/**' ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, 'feat/**' ]
 
 jobs:
   test:
-    name: Run Python Tests & Coverage
+    name: Run Quality, Security & Tests
     runs-on: ubuntu-latest
 
     steps:
@@ -25,6 +25,12 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements-dev.txt
+
+    - name: Run style check (Ruff)
+      run: ruff check .
+
+    - name: Run security scan (Bandit)
+      run: bandit -r gateway shared services
 
     - name: Run all tests with coverage
       run: |
