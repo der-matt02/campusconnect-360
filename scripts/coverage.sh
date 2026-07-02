@@ -32,4 +32,4 @@ PYTHONPATH="$ROOT:$ROOT/gateway" \
   run_cov "$ROOT/gateway/app,$ROOT/shared" "gateway/tests"
 
 "$PYBIN" -m coverage combine
-"$PYBIN" -m coverage report -m
+"$PYBIN" -m coverage report --fail-under=95 -m

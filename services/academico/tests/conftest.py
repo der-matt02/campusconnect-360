@@ -3,12 +3,11 @@ import os
 
 os.environ.setdefault("DATABASE_URL", "sqlite://")
 
-import pytest
-from fastapi.testclient import TestClient
-
 import app.consumer as consumer_module
 import app.main as main_module
+import pytest
 from app.database import Base, engine
+from fastapi.testclient import TestClient
 
 
 @pytest.fixture(autouse=True)
