@@ -1,5 +1,6 @@
 // Portal Financiero / Pagos: consultar deudas, registrar y confirmar pagos.
 import { useEffect, useState } from "react";
+import { Wallet, Users, FilePlus, Receipt, CheckCircle2 } from "lucide-react";
 import { api } from "../api";
 
 export default function Pagos() {
@@ -44,12 +45,20 @@ export default function Pagos() {
 
   return (
     <div>
-      <h2>Portal Financiero / Pagos</h2>
+      <div className="page-title">
+        <span className="page-title-icon">
+          <Wallet size={20} strokeWidth={2} />
+        </span>
+        <h2>Portal Financiero / Pagos</h2>
+      </div>
       {msg && <div className={`alert ${msg.type}`}>{msg.text}</div>}
 
       <div className="row">
         <div className="card">
-          <h3>Estudiantes matriculados</h3>
+          <div className="section-title">
+            <Users size={17} strokeWidth={2} />
+            <h3>Estudiantes matriculados</h3>
+          </div>
           <table>
             <thead><tr><th>ID</th><th>Nombre</th><th>Pagos</th></tr></thead>
             <tbody>
@@ -65,7 +74,10 @@ export default function Pagos() {
         </div>
 
         <div className="card">
-          <h3>Registrar deuda / simular obligacion</h3>
+          <div className="section-title">
+            <FilePlus size={17} strokeWidth={2} />
+            <h3>Registrar deuda / simular obligacion</h3>
+          </div>
           <form onSubmit={createDebt}>
             <label>Estudiante</label>
             <select value={debt.student_id} required onChange={(e) => setDebt({ ...debt, student_id: e.target.value })}>
@@ -78,13 +90,19 @@ export default function Pagos() {
             <label>Monto</label>
             <input type="number" value={debt.amount}
               onChange={(e) => setDebt({ ...debt, amount: e.target.value })} />
-            <button type="submit">Registrar deuda</button>
+            <button type="submit" className="icon-btn">
+              <FilePlus size={15} strokeWidth={2} />
+              Registrar deuda
+            </button>
           </form>
         </div>
       </div>
 
       <div className="card">
-        <h3>Pagos</h3>
+        <div className="section-title">
+          <Receipt size={17} strokeWidth={2} />
+          <h3>Pagos</h3>
+        </div>
         <label>Filtrar por estado</label>
         <select value={filter} onChange={(e) => setFilter(e.target.value)} style={{ maxWidth: 240 }}>
           <option value="">Todos</option>
@@ -107,7 +125,10 @@ export default function Pagos() {
                 </td>
                 <td>
                   {p.status === "PENDIENTE" && (
-                    <button className="green" onClick={() => confirm(p.id)}>Confirmar pago</button>
+                    <button className="green icon-btn" onClick={() => confirm(p.id)}>
+                      <CheckCircle2 size={14} strokeWidth={2} />
+                      Confirmar pago
+                    </button>
                   )}
                 </td>
               </tr>
