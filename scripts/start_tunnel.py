@@ -169,9 +169,8 @@ def main():
         "--restart", "unless-stopped",
         "cloudflare/cloudflared:latest",
         "tunnel",
-        "--no-autoupdate",
-        "run",
         "--url", TUNNEL_TARGET,
+        "--no-autoupdate",
     ])
 
     if result.returncode != 0:
