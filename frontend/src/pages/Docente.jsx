@@ -1,12 +1,23 @@
 // Portal Docente / Bienestar: registrar asistencia e incidentes.
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { api } from "../api";
+
+const toApiDate = (date) => date.toISOString().split("T")[0];
+
+const CalendarInput = forwardRef(({ value, onClick, placeholder }, ref) => (
+  <div className="date-picker-wrapper" onClick={onClick} ref={ref}>
+    <input readOnly value={value} placeholder={placeholder} />
+    <span className="date-picker-icon">📅</span>
+  </div>
+));
 
 export default function Docente() {
   const [students, setStudents] = useState([]);
   const [msg, setMsg] = useState(null);
   const [history, setHistory] = useState(null);
-  const [att, setAtt] = useState({ student_id: "", date: new Date().toISOString().split("T")[0], status: "PRESENTE" });
+  const [att, setAtt] = useState({ student_id: "", date: new Date(), status: "PRESENTE" });
   const [inc, setInc] = useState({ student_id: "", severity: "BAJA", description: "" });
 
   async function load() {
@@ -22,7 +33,7 @@ export default function Docente() {
     e.preventDefault();
     setMsg(null);
     try {
-      await api.registerAttendance(att);
+      await api.registerAttendance({ ...att, date: toApiDate(att.date) });
       setMsg({ type: "success", text: "Asistencia registrada correctamente." });
     } catch (e) {
       setMsg({ type: "error", text: e.message });
@@ -65,7 +76,13 @@ export default function Docente() {
               {students.map(s => <option key={s.id} value={s.id}>{s.full_name} ({s.id})</option>)}
             </select>
             <label>Fecha</label>
-            <input type="date" value={att.date} required onChange={(e) => setAtt({ ...att, date: e.target.value })} />
+            <DatePicker
+              selected={att.date}
+              onChange={(date) => setAtt({ ...att, date })}
+              dateFormat="dd/MM/yyyy"
+              minDate={new Date()}
+              customInput={<CalendarInput placeholder="dd/mm/yyyy" />}
+            />
             <label>Estado</label>
             <select value={att.status} onChange={(e) => setAtt({ ...att, status: e.target.value })}>
               <option>PRESENTE</option><option>AUSENTE</option><option>TARDE</option>
