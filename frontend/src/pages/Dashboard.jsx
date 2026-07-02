@@ -37,6 +37,7 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [health, setHealth] = useState(null);
   const [events, setEvents] = useState([]);
+  const [students, setStudents] = useState([]);
   const [msg, setMsg] = useState(null);
 
   async function load() {
@@ -45,6 +46,11 @@ export default function Dashboard() {
       setStats(await api.notifStats());
       setHealth(await api.health());
       setEvents(await api.recentEvents());
+      try {
+        setStudents(await api.listStudents());
+      } catch (err) {
+        console.warn("No se pudo cargar estudiantes en dashboard:", err);
+      }
     } catch (e) {
       setMsg({ type: "error", text: e.message });
     }
@@ -164,16 +170,28 @@ export default function Dashboard() {
           <h3>Eventos recientes (trazabilidad)</h3>
         </div>
         <table>
-          <thead><tr><th>Tipo</th><th>Estudiante</th><th>Correlacion</th><th>Fecha</th></tr></thead>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Nombre del estudiante</th>
+              <th>ID Estudiante</th>
+              <th>Correlacion</th>
+              <th>Fecha</th>
+            </tr>
+          </thead>
           <tbody>
-            {events.map((e) => (
-              <tr key={e.eventId}>
-                <td>{e.eventType}</td>
-                <td>{e.studentId}</td>
-                <td className="muted">{e.correlationId}</td>
-                <td className="muted">{new Date(e.occurredAt).toLocaleString()}</td>
-              </tr>
-            ))}
+            {events.map((e) => {
+              const student = students.find((s) => s.id === e.studentId);
+              return (
+                <tr key={e.eventId}>
+                  <td>{e.eventType}</td>
+                  <td>{student ? student.full_name : "Desconocido"}</td>
+                  <td>{e.studentId || "-"}</td>
+                  <td className="muted">{e.correlationId}</td>
+                  <td className="muted">{new Date(e.occurredAt).toLocaleString()}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
