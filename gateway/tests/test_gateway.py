@@ -173,6 +173,8 @@ def test_request_forwarding_headers(client, monkeypatch):
     captured_headers = {}
 
     class FakeAsyncClientForHeaders:
+        def __init__(self, *args, **kwargs):
+            pass
         async def __aenter__(self):
             return self
         async def __aexit__(self, *args):
