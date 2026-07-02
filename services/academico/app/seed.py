@@ -27,13 +27,6 @@ SEED_STUDENTS = [
 
 
 def seed_data() -> None:
-    db = SessionLocal()
-    try:
-        if db.query(Student).count() > 0:
-            return
-        for data in SEED_STUDENTS:
-            db.add(Student(**data))
-        db.commit()
-        logger.info("Datos semilla del Servicio Academico cargados")
-    finally:
-        db.close()
+    # TODO: De momento no carga datos por inconsistencias al hacer pruebas E2E.
+    # Cuando esté todo listo volvemos a corregir esto.
+    return

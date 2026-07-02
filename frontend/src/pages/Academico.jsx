@@ -5,12 +5,38 @@ import { api } from "../api";
 
 function validateStudentForm(f) {
   const errors = {};
-  if (!f.full_name.trim()) errors.full_name = "El nombre completo es obligatorio.";
-  if (!f.document_id.trim()) errors.document_id = "El documento es obligatorio.";
-  else if (!/^\d{6,15}$/.test(f.document_id.trim())) errors.document_id = "Debe tener entre 6 y 15 digitos numericos.";
-  if (f.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) errors.email = "Ingresa un email valido.";
-  if (!f.school_id.trim()) errors.school_id = "El colegio es obligatorio.";
-  if (!f.grade.trim()) errors.grade = "El grado es obligatorio.";
+  if (!f.full_name.trim()) {
+    errors.full_name = "El nombre completo es obligatorio.";
+  } else if (f.full_name.trim().length > 100) {
+    errors.full_name = "El nombre completo no puede exceder los 100 caracteres.";
+  }
+
+  if (!f.document_id.trim()) {
+    errors.document_id = "El documento es obligatorio.";
+  } else if (!/^\d{6,15}$/.test(f.document_id.trim())) {
+    errors.document_id = "Debe tener entre 6 y 15 digitos numericos.";
+  }
+
+  if (f.email.trim()) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.trim())) {
+      errors.email = "Ingresa un email valido.";
+    } else if (f.email.trim().length > 100) {
+      errors.email = "El email no puede exceder los 100 caracteres.";
+    }
+  }
+
+  if (!f.school_id.trim()) {
+    errors.school_id = "El colegio es obligatorio.";
+  } else if (f.school_id.trim().length > 50) {
+    errors.school_id = "El ID del colegio no puede exceder los 50 caracteres.";
+  }
+
+  if (!f.grade.trim()) {
+    errors.grade = "El grado es obligatorio.";
+  } else if (f.grade.trim().length > 50) {
+    errors.grade = "El grado no puede exceder los 50 caracteres.";
+  }
+
   return errors;
 }
 
@@ -101,6 +127,7 @@ export default function Academico() {
             <input
               value={form.full_name}
               className={errors.full_name ? "input-error" : ""}
+              maxLength={100}
               onChange={(e) => updateField("full_name", e.target.value)}
             />
             {errors.full_name && <p className="field-error">{errors.full_name}</p>}
@@ -109,6 +136,7 @@ export default function Academico() {
             <input
               value={form.document_id}
               className={errors.document_id ? "input-error" : ""}
+              maxLength={15}
               onChange={(e) => updateField("document_id", e.target.value)}
             />
             {errors.document_id && <p className="field-error">{errors.document_id}</p>}
@@ -117,6 +145,7 @@ export default function Academico() {
             <input
               value={form.email}
               className={errors.email ? "input-error" : ""}
+              maxLength={100}
               onChange={(e) => updateField("email", e.target.value)}
             />
             {errors.email && <p className="field-error">{errors.email}</p>}
@@ -127,6 +156,7 @@ export default function Academico() {
                 <input
                   value={form.school_id}
                   className={errors.school_id ? "input-error" : ""}
+                  maxLength={50}
                   onChange={(e) => updateField("school_id", e.target.value)}
                 />
                 {errors.school_id && <p className="field-error">{errors.school_id}</p>}
@@ -136,6 +166,7 @@ export default function Academico() {
                 <input
                   value={form.grade}
                   className={errors.grade ? "input-error" : ""}
+                  maxLength={50}
                   onChange={(e) => updateField("grade", e.target.value)}
                 />
                 {errors.grade && <p className="field-error">{errors.grade}</p>}
@@ -155,7 +186,7 @@ export default function Academico() {
           </div>
           <p className="muted">Selecciona un estudiante de la lista y define el periodo.</p>
           <label>Periodo</label>
-          <input value={period} onChange={(e) => setPeriod(e.target.value)} />
+          <input value={period} maxLength={20} onChange={(e) => setPeriod(e.target.value)} />
           <p className="muted">Usa el boton "Matricular" en cada estudiante.</p>
         </div>
       </div>

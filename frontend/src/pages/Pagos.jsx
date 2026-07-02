@@ -85,7 +85,7 @@ export default function Pagos() {
               {students.map(s => <option key={s.id} value={s.id}>{s.full_name} ({s.id})</option>)}
             </select>
             <label>Concepto</label>
-            <input value={debt.concept} required
+            <input value={debt.concept} required maxLength={150}
               onChange={(e) => setDebt({ ...debt, concept: e.target.value })} />
             <label>Monto</label>
             <input type="number" value={debt.amount}
