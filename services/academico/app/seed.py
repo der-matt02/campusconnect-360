@@ -1,9 +1,6 @@
 """Datos semilla del Servicio Academico."""
 import logging
 
-from .database import SessionLocal
-from .models import Student
-
 logger = logging.getLogger("academico.seed")
 
 SEED_STUDENTS = [
