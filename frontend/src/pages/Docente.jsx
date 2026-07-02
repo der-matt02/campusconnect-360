@@ -23,7 +23,7 @@ export default function Docente() {
     setMsg(null);
     try {
       await api.registerAttendance(att);
-      setMsg({ type: "success", text: "Asistencia registrada (evento AttendanceRecorded)." });
+      setMsg({ type: "success", text: "Asistencia registrada correctamente." });
     } catch (e) {
       setMsg({ type: "error", text: e.message });
     }
@@ -34,7 +34,7 @@ export default function Docente() {
     setMsg(null);
     try {
       await api.registerIncident(inc);
-      setMsg({ type: "success", text: "Incidente registrado (evento IncidentReported)." });
+      setMsg({ type: "success", text: "Incidente registrado correctamente." });
     } catch (e) {
       setMsg({ type: "error", text: e.message });
     }
