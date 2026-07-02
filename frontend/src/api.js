@@ -1,5 +1,8 @@
 // Cliente del API Gateway. Adjunta el JWT a cada peticion protegida.
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// En producción (Docker + Nginx) se deja vacío: Nginx actúa como reverse proxy
+// y enruta /api/* y /auth/* al Gateway internamente (mismo origen, sin CORS).
+// En desarrollo local con Vite, definir VITE_API_URL=http://localhost:8000 en .env
+const API_URL = import.meta.env.VITE_API_URL || "";
 
 function getToken() {
   return localStorage.getItem("token");
