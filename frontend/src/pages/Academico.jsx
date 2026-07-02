@@ -54,12 +54,16 @@ export default function Academico() {
     const saved = localStorage.getItem("cc_periods");
     return saved ? JSON.parse(saved) : ["2026-1", "2026-2"];
   });
-  const [period, setPeriod] = useState(periods[0] || "2026-1");
   const [newPeriod, setNewPeriod] = useState("");
-  const [initialPeriod, setInitialPeriod] = useState("");
+  const [registerPeriod, setRegisterPeriod] = useState(periods[0] || "2026-1");
+  const [rowPeriods, setRowPeriods] = useState({});
 
   useEffect(() => {
     localStorage.setItem("cc_periods", JSON.stringify(periods));
+    // Sincronizar selectores si la lista de periodos cambia
+    if (periods.length > 0) {
+      if (!periods.includes(registerPeriod)) setRegisterPeriod(periods[0]);
+    }
   }, [periods]);
 
   function addPeriod() {
@@ -79,17 +83,25 @@ export default function Academico() {
     if (periods.length <= 1) return;
     const filtered = periods.filter((item) => item !== p);
     setPeriods(filtered);
-    if (period === p) {
-      setPeriod(filtered[0] || "");
-    }
-    if (initialPeriod === p) {
-      setInitialPeriod("");
+    if (registerPeriod === p) {
+      setRegisterPeriod(filtered[0] || "");
     }
   }
 
   async function load() {
     try {
-      setStudents(await api.listStudents());
+      const list = await api.listStudents();
+      setStudents(list);
+      setRowPeriods((prev) => {
+        const next = { ...prev };
+        list.forEach((s) => {
+          const activeEnr = (s.enrollments || []).find((e) => e.status === "ACTIVA") || s.enrollments?.[0];
+          if (!activeEnr && !next[s.id]) {
+            next[s.id] = periods[0] || "2026-1";
+          }
+        });
+        return next;
+      });
     } catch (e) {
       setMsg({ type: "error", text: e.message });
     }
@@ -112,14 +124,13 @@ export default function Academico() {
     setErrors({});
     try {
       const student = await api.createStudent(form);
-      let enrollMsg = "";
-      if (initialPeriod) {
-        await api.createEnrollment({ student_id: student.id, period: initialPeriod });
-        enrollMsg = ` y matriculado en el periodo ${initialPeriod} (evento StudentEnrolled publicado)`;
-      }
-      setMsg({ type: "success", text: `Estudiante "${form.full_name}" registrado correctamente${enrollMsg}.` });
+      setRowPeriods((prev) => ({ ...prev, [student.id]: registerPeriod }));
+      setMsg({ 
+        type: "success", 
+        text: `Estudiante "${form.full_name}" registrado correctamente en el periodo ${registerPeriod}. Haz clic en "Matricular" en la lista de abajo para confirmar.` 
+      });
       setForm({ ...form, full_name: "", document_id: "", email: "" });
-      setInitialPeriod("");
+      setRegisterPeriod(periods[0] || "");
       load();
     } catch (e) {
       if (/documento/i.test(e.message)) {
@@ -130,24 +141,25 @@ export default function Academico() {
     }
   }
 
+  async function enroll(id, name, rowPeriod) {
+    console.log("Iniciando matricula:", id, name, rowPeriod);
+    setMsg(null);
+    try {
+      console.log("Llamando a api.createEnrollment...");
+      await api.createEnrollment({ student_id: id, period: rowPeriod });
+      console.log("Matricula creada con exito");
+      setMsg({ type: "success", text: `${name} matriculado en el periodo ${rowPeriod} (evento StudentEnrolled publicado).` });
+      load();
+    } catch (e) {
+      console.error("Error en api.createEnrollment:", e);
+      setMsg({ type: "error", text: e.message });
+    }
+  }
+
   async function viewDetail(id) {
     setDetail(await api.getStudent(id));
   }
 
-  function isEnrolledInPeriod(student) {
-    return (student.enrollments || []).some((en) => en.period === period);
-  }
-
-  async function enroll(id, name) {
-    setMsg(null);
-    try {
-      await api.createEnrollment({ student_id: id, period });
-      setMsg({ type: "success", text: `${name} matriculado en el periodo ${period} (evento StudentEnrolled publicado).` });
-      load();
-    } catch (e) {
-      setMsg({ type: "error", text: e.message });
-    }
-  }
 
   return (
     <div>
@@ -216,13 +228,13 @@ export default function Academico() {
               </div>
             </div>
 
-            <label>Matricula Inicial (Opcional)</label>
+            <label>Periodo</label>
             <select
-              value={initialPeriod}
-              onChange={(e) => setInitialPeriod(e.target.value)}
+              value={registerPeriod}
+              onChange={(e) => setRegisterPeriod(e.target.value)}
               style={{ marginBottom: "1rem" }}
+              required
             >
-              <option value="">Ninguna (Solo registrar)</option>
               {periods.map((p) => <option key={p} value={p}>{p}</option>)}
             </select>
 
@@ -233,18 +245,7 @@ export default function Academico() {
           </form>
         </div>
 
-        <div className="card">
-          <div className="section-title">
-            <BookPlus size={17} strokeWidth={2} />
-            <h3>Crear matricula</h3>
-          </div>
-          <p className="muted">Selecciona un estudiante de la lista y define el periodo.</p>
-          <label>Periodo</label>
-          <select value={period} onChange={(e) => setPeriod(e.target.value)}>
-            {periods.map((p) => <option key={p} value={p}>{p}</option>)}
-          </select>
-          <p className="muted" style={{ marginTop: "0.75rem" }}>Usa el boton "Matricular" en cada estudiante.</p>
-        </div>
+
 
         <div className="card">
           <div className="section-title">
@@ -299,41 +300,55 @@ export default function Academico() {
         <table>
           <thead>
             <tr>
-              <th>ID</th><th>Nombre</th><th>Grado</th><th>Estado financiero</th>
-              <th>Matricula ({period || "-"})</th><th></th>
+              <th>ID</th><th>Nombre</th><th>Grado</th><th>Colegio</th><th>Estado financiero</th>
+              <th>Periodo</th><th>Matrícula</th><th></th>
             </tr>
           </thead>
           <tbody>
-            {students.map((s) => (
-              <tr key={s.id}>
-                <td>{s.id}</td>
-                <td>{s.full_name}</td>
-                <td>{s.grade}</td>
-                <td>
-                  <span className={`badge ${s.financial_status === "AL_DIA" ? "ok" : "warn"}`}>
-                    {s.financial_status}
-                  </span>
-                </td>
-                <td>
-                  <span className={`badge icon-btn ${isEnrolledInPeriod(s) ? "ok" : "warn"}`}>
-                    <BadgeCheck size={13} strokeWidth={2} />
-                    {isEnrolledInPeriod(s) ? "Matriculado" : "No matriculado"}
-                  </span>
-                </td>
-                <td>
-                  <button className="secondary icon-btn" onClick={() => viewDetail(s.id)}>
-                    <Eye size={14} strokeWidth={2} />
-                    Ver ficha
-                  </button>{" "}
-                  {!isEnrolledInPeriod(s) && (
-                    <button className="green icon-btn" onClick={() => enroll(s.id, s.full_name)}>
-                      <BadgeCheck size={14} strokeWidth={2} />
-                      Matricular
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {students.map((s) => {
+              const activeEnrollment = (s.enrollments || []).find((e) => e.status === "ACTIVA") || s.enrollments?.[0];
+              const selectedRowPeriod = rowPeriods[s.id] || periods[0] || "2026-1";
+              return (
+                <tr key={s.id}>
+                  <td>{s.id}</td>
+                  <td>{s.full_name}</td>
+                  <td>{s.grade}</td>
+                  <td>{s.school_id}</td>
+                  <td>
+                    <span className={`badge ${s.financial_status === "AL_DIA" ? "ok" : "warn"}`}>
+                      {s.financial_status}
+                    </span>
+                  </td>
+                  <td>
+                    <span className="muted">{activeEnrollment ? activeEnrollment.period : selectedRowPeriod}</span>
+                  </td>
+                  <td>
+                    <span className={`badge icon-btn ${activeEnrollment ? "ok" : "warn"}`}>
+                      <BadgeCheck size={13} strokeWidth={2} />
+                      {activeEnrollment ? "Matriculado" : "No matriculado"}
+                    </span>
+                  </td>
+                  <td>
+                    <button className="secondary icon-btn" onClick={() => viewDetail(s.id)}>
+                      <Eye size={14} strokeWidth={2} />
+                      Ver ficha
+                    </button>{" "}
+                     {!activeEnrollment && (
+                      <button 
+                        className="green icon-btn" 
+                        onClick={() => {
+                          console.log("Boton matricular clickeado para:", s.id, "periodo:", selectedRowPeriod);
+                          enroll(s.id, s.full_name, selectedRowPeriod);
+                        }}
+                      >
+                        <BadgeCheck size={14} strokeWidth={2} />
+                        Matricular
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
