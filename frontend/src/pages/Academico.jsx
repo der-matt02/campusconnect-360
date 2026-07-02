@@ -48,7 +48,44 @@ export default function Academico() {
     full_name: "", document_id: "", email: "", school_id: "SCH-001", grade: "8vo EGB",
   });
   const [errors, setErrors] = useState({});
-  const [period, setPeriod] = useState("2026-1");
+
+  // Catalogo de periodos que persiste en localStorage
+  const [periods, setPeriods] = useState(() => {
+    const saved = localStorage.getItem("cc_periods");
+    return saved ? JSON.parse(saved) : ["2026-1", "2026-2"];
+  });
+  const [period, setPeriod] = useState(periods[0] || "2026-1");
+  const [newPeriod, setNewPeriod] = useState("");
+  const [initialPeriod, setInitialPeriod] = useState("");
+
+  useEffect(() => {
+    localStorage.setItem("cc_periods", JSON.stringify(periods));
+  }, [periods]);
+
+  function addPeriod() {
+    setMsg(null);
+    const val = newPeriod.trim();
+    if (!val) return;
+    if (periods.includes(val)) {
+      setMsg({ type: "error", text: `El periodo "${val}" ya existe en el catalogo.` });
+      return;
+    }
+    setPeriods([...periods, val]);
+    setNewPeriod("");
+  }
+
+  function removePeriod(p) {
+    setMsg(null);
+    if (periods.length <= 1) return;
+    const filtered = periods.filter((item) => item !== p);
+    setPeriods(filtered);
+    if (period === p) {
+      setPeriod(filtered[0] || "");
+    }
+    if (initialPeriod === p) {
+      setInitialPeriod("");
+    }
+  }
 
   async function load() {
     try {
@@ -74,9 +111,15 @@ export default function Academico() {
     }
     setErrors({});
     try {
-      await api.createStudent(form);
-      setMsg({ type: "success", text: `Estudiante "${form.full_name}" registrado correctamente.` });
+      const student = await api.createStudent(form);
+      let enrollMsg = "";
+      if (initialPeriod) {
+        await api.createEnrollment({ student_id: student.id, period: initialPeriod });
+        enrollMsg = ` y matriculado en el periodo ${initialPeriod} (evento StudentEnrolled publicado)`;
+      }
+      setMsg({ type: "success", text: `Estudiante "${form.full_name}" registrado correctamente${enrollMsg}.` });
       setForm({ ...form, full_name: "", document_id: "", email: "" });
+      setInitialPeriod("");
       load();
     } catch (e) {
       if (/documento/i.test(e.message)) {
@@ -172,6 +215,17 @@ export default function Academico() {
                 {errors.grade && <p className="field-error">{errors.grade}</p>}
               </div>
             </div>
+
+            <label>Matricula Inicial (Opcional)</label>
+            <select
+              value={initialPeriod}
+              onChange={(e) => setInitialPeriod(e.target.value)}
+              style={{ marginBottom: "1rem" }}
+            >
+              <option value="">Ninguna (Solo registrar)</option>
+              {periods.map((p) => <option key={p} value={p}>{p}</option>)}
+            </select>
+
             <button type="submit" className="icon-btn">
               <UserPlus size={15} strokeWidth={2} />
               Registrar
@@ -186,8 +240,54 @@ export default function Academico() {
           </div>
           <p className="muted">Selecciona un estudiante de la lista y define el periodo.</p>
           <label>Periodo</label>
-          <input value={period} maxLength={20} onChange={(e) => setPeriod(e.target.value)} />
-          <p className="muted">Usa el boton "Matricular" en cada estudiante.</p>
+          <select value={period} onChange={(e) => setPeriod(e.target.value)}>
+            {periods.map((p) => <option key={p} value={p}>{p}</option>)}
+          </select>
+          <p className="muted" style={{ marginTop: "0.75rem" }}>Usa el boton "Matricular" en cada estudiante.</p>
+        </div>
+
+        <div className="card">
+          <div className="section-title">
+            <GraduationCap size={17} strokeWidth={2} />
+            <h3>Catalogo de periodos</h3>
+          </div>
+          <p className="muted">Gestiona los periodos escolares validos para matricula.</p>
+          
+          <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
+            <input 
+              value={newPeriod} 
+              placeholder="Ej: 2026-2" 
+              maxLength={20}
+              onChange={(e) => setNewPeriod(e.target.value)} 
+            />
+            <button 
+              type="button" 
+              onClick={addPeriod}
+              style={{ marginTop: 0 }}
+            >
+              Agregar
+            </button>
+          </div>
+
+          <div style={{ marginTop: "1rem" }}>
+            <label>Periodos activos</label>
+            <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+              {periods.map((p) => (
+                <li key={p} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0.4rem 0", borderBottom: "1px solid var(--borde)" }}>
+                  <span>{p}</span>
+                  {periods.length > 1 && (
+                    <button 
+                      className="danger icon-btn" 
+                      style={{ padding: "0.2rem 0.5rem", fontSize: "0.75rem", marginTop: 0 }}
+                      onClick={() => removePeriod(p)}
+                    >
+                      Eliminar
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
 
