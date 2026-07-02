@@ -86,8 +86,8 @@ export default function Docente() {
             <select value={inc.severity} onChange={(e) => setInc({ ...inc, severity: e.target.value })}>
               <option>BAJA</option><option>MEDIA</option><option>ALTA</option>
             </select>
-            <label>Descripcion</label>
-            <input value={inc.description} required minLength={5}
+            <label>Descripcion ({inc.description.length}/300)</label>
+            <input value={inc.description} required minLength={5} maxLength={300}
               onChange={(e) => setInc({ ...inc, description: e.target.value })} />
             <button type="submit">Registrar incidente</button>
           </form>
