@@ -1,5 +1,6 @@
 // Portal Docente / Bienestar: registrar asistencia e incidentes.
 import { forwardRef, useEffect, useState } from "react";
+import { ClipboardList, CalendarCheck, AlertTriangle, Users, History, X } from "lucide-react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { api } from "../api";
@@ -63,12 +64,20 @@ export default function Docente() {
 
   return (
     <div>
-      <h2>Portal Docente / Bienestar</h2>
+      <div className="page-title">
+        <span className="page-title-icon">
+          <ClipboardList size={20} strokeWidth={2} />
+        </span>
+        <h2>Portal Docente / Bienestar</h2>
+      </div>
       {msg && <div className={`alert ${msg.type}`}>{msg.text}</div>}
 
       <div className="row">
         <div className="card">
-          <h3>Registrar asistencia</h3>
+          <div className="section-title">
+            <CalendarCheck size={17} strokeWidth={2} />
+            <h3>Registrar asistencia</h3>
+          </div>
           <form onSubmit={registerAtt}>
             <label>Estudiante</label>
             <select value={att.student_id} required onChange={(e) => setAtt({ ...att, student_id: e.target.value })}>
@@ -87,12 +96,18 @@ export default function Docente() {
             <select value={att.status} onChange={(e) => setAtt({ ...att, status: e.target.value })}>
               <option>PRESENTE</option><option>AUSENTE</option><option>TARDE</option>
             </select>
-            <button type="submit">Registrar asistencia</button>
+            <button type="submit" className="icon-btn">
+              <CalendarCheck size={15} strokeWidth={2} />
+              Registrar asistencia
+            </button>
           </form>
         </div>
 
         <div className="card">
-          <h3>Registrar incidente / novedad</h3>
+          <div className="section-title">
+            <AlertTriangle size={17} strokeWidth={2} />
+            <h3>Registrar incidente / novedad</h3>
+          </div>
           <form onSubmit={registerInc}>
             <label>Estudiante</label>
             <select value={inc.student_id} required onChange={(e) => setInc({ ...inc, student_id: e.target.value })}>
@@ -106,20 +121,31 @@ export default function Docente() {
             <label>Descripcion ({inc.description.length}/300)</label>
             <input value={inc.description} required minLength={5} maxLength={300}
               onChange={(e) => setInc({ ...inc, description: e.target.value })} />
-            <button type="submit">Registrar incidente</button>
+            <button type="submit" className="icon-btn">
+              <AlertTriangle size={15} strokeWidth={2} />
+              Registrar incidente
+            </button>
           </form>
         </div>
       </div>
 
       <div className="card">
-        <h3>Estudiantes</h3>
+        <div className="section-title">
+          <Users size={17} strokeWidth={2} />
+          <h3>Estudiantes</h3>
+        </div>
         <table>
           <thead><tr><th>ID</th><th>Nombre</th><th>Grado</th><th></th></tr></thead>
           <tbody>
             {students.map((s) => (
               <tr key={s.id}>
                 <td>{s.id}</td><td>{s.full_name}</td><td>{s.grade}</td>
-                <td><button className="secondary" onClick={() => viewHistory(s.id)}>Ver historial</button></td>
+                <td>
+                  <button className="secondary icon-btn" onClick={() => viewHistory(s.id)}>
+                    <History size={14} strokeWidth={2} />
+                    Ver historial
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -129,9 +155,11 @@ export default function Docente() {
       {history && (
         <div className="modal-overlay" onClick={() => setHistory(null)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setHistory(null)}>&times;</button>
+            <button className="modal-close" onClick={() => setHistory(null)}>
+              <X size={20} strokeWidth={2} />
+            </button>
             <h3 style={{ marginTop: 0 }}>Historial de {history.id}</h3>
-            <h4>Asistencia</h4>
+            <h4 className="section-title"><CalendarCheck size={15} strokeWidth={2} />Asistencia</h4>
             <table>
               <thead><tr><th>Fecha</th><th>Estado</th></tr></thead>
               <tbody>
@@ -140,7 +168,7 @@ export default function Docente() {
                 ))}
               </tbody>
             </table>
-            <h4>Incidentes</h4>
+            <h4 className="section-title"><AlertTriangle size={15} strokeWidth={2} />Incidentes</h4>
             <table>
               <thead><tr><th>Severidad</th><th>Descripcion</th></tr></thead>
               <tbody>

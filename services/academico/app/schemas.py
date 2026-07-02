@@ -48,8 +48,8 @@ class StudentOut(BaseModel):
     grade: str
     financial_status: str
     created_at: datetime
+    enrollments: List[EnrollmentOut] = []
 
 
 class StudentDetail(StudentOut):
-    enrollments: List[EnrollmentOut] = []
     events: List[StudentEventOut] = []
