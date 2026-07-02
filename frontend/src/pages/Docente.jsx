@@ -1,13 +1,24 @@
 // Portal Docente / Bienestar: registrar asistencia e incidentes.
-import { useEffect, useState } from "react";
+import { forwardRef, useEffect, useState } from "react";
 import { ClipboardList, CalendarCheck, AlertTriangle, Users, History, X } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 import { api } from "../api";
+
+const toApiDate = (date) => date.toISOString().split("T")[0];
+
+const CalendarInput = forwardRef(({ value, onClick, placeholder }, ref) => (
+  <div className="date-picker-wrapper" onClick={onClick} ref={ref}>
+    <input readOnly value={value} placeholder={placeholder} />
+    <span className="date-picker-icon">📅</span>
+  </div>
+));
 
 export default function Docente() {
   const [students, setStudents] = useState([]);
   const [msg, setMsg] = useState(null);
   const [history, setHistory] = useState(null);
-  const [att, setAtt] = useState({ student_id: "", date: "2026-06-12", status: "PRESENTE" });
+  const [att, setAtt] = useState({ student_id: "", date: new Date(), status: "PRESENTE" });
   const [inc, setInc] = useState({ student_id: "", severity: "BAJA", description: "" });
 
   async function load() {
@@ -23,8 +34,8 @@ export default function Docente() {
     e.preventDefault();
     setMsg(null);
     try {
-      await api.registerAttendance(att);
-      setMsg({ type: "success", text: "Asistencia registrada (evento AttendanceRecorded)." });
+      await api.registerAttendance({ ...att, date: toApiDate(att.date) });
+      setMsg({ type: "success", text: "Asistencia registrada correctamente." });
     } catch (e) {
       setMsg({ type: "error", text: e.message });
     }
@@ -35,16 +46,20 @@ export default function Docente() {
     setMsg(null);
     try {
       await api.registerIncident(inc);
-      setMsg({ type: "success", text: "Incidente registrado (evento IncidentReported)." });
+      setMsg({ type: "success", text: "Incidente registrado correctamente." });
     } catch (e) {
       setMsg({ type: "error", text: e.message });
     }
   }
 
   async function viewHistory(id) {
-    const attendance = await api.studentAttendance(id);
-    const incidents = await api.studentIncidents(id);
-    setHistory({ id, attendance, incidents });
+    try {
+      const attendance = await api.studentAttendance(id);
+      const incidents = await api.studentIncidents(id);
+      setHistory({ id, attendance, incidents });
+    } catch (e) {
+      setMsg({ type: "error", text: e.message });
+    }
   }
 
   return (
@@ -70,7 +85,13 @@ export default function Docente() {
               {students.map(s => <option key={s.id} value={s.id}>{s.full_name} ({s.id})</option>)}
             </select>
             <label>Fecha</label>
-            <input value={att.date} onChange={(e) => setAtt({ ...att, date: e.target.value })} />
+            <DatePicker
+              selected={att.date}
+              onChange={(date) => setAtt({ ...att, date })}
+              dateFormat="dd/MM/yyyy"
+              minDate={new Date()}
+              customInput={<CalendarInput placeholder="dd/mm/yyyy" />}
+            />
             <label>Estado</label>
             <select value={att.status} onChange={(e) => setAtt({ ...att, status: e.target.value })}>
               <option>PRESENTE</option><option>AUSENTE</option><option>TARDE</option>
@@ -97,8 +118,8 @@ export default function Docente() {
             <select value={inc.severity} onChange={(e) => setInc({ ...inc, severity: e.target.value })}>
               <option>BAJA</option><option>MEDIA</option><option>ALTA</option>
             </select>
-            <label>Descripcion</label>
-            <input value={inc.description} required
+            <label>Descripcion ({inc.description.length}/300)</label>
+            <input value={inc.description} required minLength={5} maxLength={300}
               onChange={(e) => setInc({ ...inc, description: e.target.value })} />
             <button type="submit" className="icon-btn">
               <AlertTriangle size={15} strokeWidth={2} />

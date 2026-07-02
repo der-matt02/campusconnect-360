@@ -228,6 +228,48 @@ tbody tr:hover { background: var(--fondo); }
 .row { display: flex; gap: 1rem; flex-wrap: wrap; }
 .row > * { flex: 1; min-width: 200px; }
 
+
+.date-picker-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--borde);
+  border-radius: var(--radio-sm);
+  background: var(--superficie);
+  cursor: pointer;
+  padding: 0 0.5rem;
+  gap: 0.4rem;
+  transition: border-color var(--transicion), box-shadow var(--transicion);
+}
+.date-picker-wrapper:hover,
+.date-picker-wrapper:focus-within {
+  border-color: var(--naranja);
+  box-shadow: 0 0 0 3px var(--naranja-suave);
+}
+.date-picker-wrapper input {
+  border: none;
+  outline: none;
+  box-shadow: none;
+  width: auto;
+  flex: 1;
+  cursor: pointer;
+  background: transparent;
+  padding: 0.55rem 0;
+  font-size: 0.95rem;
+}
+.date-picker-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  color: var(--gris);
+}
+.react-datepicker__day--selected,
+.react-datepicker__day--keyboard-selected {
+  background-color: var(--naranja) !important;
+  border-radius: 50%;
+}
+.react-datepicker__day--disabled {
+  color: #ccc !important;
+}
+
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(17, 24, 39, 0.55); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal-content { background: var(--superficie); padding: 1.5rem; border-radius: var(--radio); box-shadow: var(--sombra-lg); width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; }
 .modal-close { position: absolute; top: 1rem; right: 1rem; background: transparent; color: var(--gris); border: none; font-size: 1.5rem; cursor: pointer; margin: 0; padding: 0; line-height: 1; }

@@ -115,7 +115,7 @@ export default function Dashboard() {
                   <td>Gateway</td>
                   <td><span className="badge ok">{health.gateway}</span></td>
                 </tr>
-                {Object.entries(health.services).map(([k, v]) => (
+                {Object.entries(health.services ?? {}).map(([k, v]) => (
                   <tr key={k}>
                     <td style={{ textTransform: "capitalize" }}>{k}</td>
                     <td>
