@@ -104,6 +104,7 @@ export default function Login() {
               id="password"
               type="password"
               value={password}
+              maxLength={50}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Ingresa tu contrasena"
               autoFocus
