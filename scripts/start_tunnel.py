@@ -152,7 +152,7 @@ def main():
     network = detect_docker_network()
     if not network:
         print(f"{RED}✗ No se encontró la red Docker de CampusConnect 360.{RESET}")
-        print(f"  Asegúrate de que el docker-compose.yml define 'name: campusconnect360'.")
+        print("  Asegúrate de que el docker-compose.yml define 'name: campusconnect360'.")
         sys.exit(1)
     print(f"{GREEN}✓ Red Docker detectada:{RESET} {network}")
 
