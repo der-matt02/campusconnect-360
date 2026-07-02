@@ -38,3 +38,9 @@ Thumbs.db
 # ---------- Logs ----------
 *.log
 logs/
+
+# ---------- Agents / Customizations ----------
+.agents/
+
+# ---------- Documentacion PDF ----------
+*.pdf

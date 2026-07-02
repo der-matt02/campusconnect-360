@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import logging
 import time
-from typing import Callable, Iterable, Optional
+from typing import Callable, Iterable
 
 import pika
 from pika.exceptions import AMQPConnectionError

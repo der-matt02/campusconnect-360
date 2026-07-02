@@ -1,7 +1,6 @@
 """Pruebas del API Gateway: autenticacion, seguridad, health y proxy."""
-from conftest import token_valido
-
 from app.security import create_access_token
+from conftest import token_valido
 
 
 def test_login_correcto(client):
@@ -138,3 +137,71 @@ def test_proxy_con_servicio_caido(client, monkeypatch):
     monkeypatch.setattr(m.httpx, "AsyncClient", _ClienteCaido)
     resp = client.get("/api/academico/students", headers={"Authorization": f"Bearer {token}"})
     assert resp.status_code == 502
+
+
+def test_token_expirado_da_401(client):
+    import time
+
+    from jose import jwt
+
+    from shared.config import SecurityConfig
+
+    expire = time.time() - 3600
+    payload = {"sub": "secretaria", "role": "academico", "name": "Nombre", "exp": expire}
+    token = jwt.encode(payload, SecurityConfig.JWT_SECRET, algorithm=SecurityConfig.JWT_ALGORITHM)
+
+    resp = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == "Token invalido o expirado"
+
+
+def test_token_firma_invalida_da_401(client):
+    from jose import jwt
+
+    from shared.config import SecurityConfig
+
+    payload = {"sub": "secretaria", "role": "academico", "name": "Nombre"}
+    token = jwt.encode(payload, "clave_incorrecta_123", algorithm=SecurityConfig.JWT_ALGORITHM)
+
+    resp = client.get("/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert resp.status_code == 401
+    assert resp.json()["detail"] == "Token invalido o expirado"
+
+
+def test_request_forwarding_headers(client, monkeypatch):
+    from conftest import FakeResponse
+    captured_headers = {}
+
+    class FakeAsyncClientForHeaders:
+        def __init__(self, *args, **kwargs):
+            pass
+        async def __aenter__(self):
+            return self
+        async def __aexit__(self, *args):
+            return False
+        async def request(self, method, url, params=None, content=None, headers=None):
+            nonlocal captured_headers
+            captured_headers = headers
+            return FakeResponse(200, {"proxied": True})
+
+    import app.main as m
+    monkeypatch.setattr(m.httpx, "AsyncClient", FakeAsyncClientForHeaders)
+
+    token = token_valido(client)
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "X-Custom-Header": "mi-valor-personalizado",
+        "Host": "localhost:8000",
+        "Content-Length": "123"
+    }
+    resp = client.get(
+        "/api/academico/students",
+        headers=headers
+    )
+    assert resp.status_code == 200
+
+    assert "host" not in captured_headers
+    assert "content-length" not in captured_headers
+    assert "authorization" not in captured_headers
+    assert captured_headers.get("x-custom-header") == "mi-valor-personalizado"
+
