@@ -8,3 +8,5 @@ spec:
   url: https://github.com/der-matt02/campusconnect-360.git
   ref:
     branch: build/devsecops
+  secretRef:
+    name: flux-system
