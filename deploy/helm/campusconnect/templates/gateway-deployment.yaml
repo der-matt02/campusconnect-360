@@ -14,6 +14,8 @@ spec:
       labels:
         app: {{ .Values.services.gateway.name }}
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: {{ .Values.services.gateway.name }}
           image: "{{ .Values.global.image.registry }}/{{ .Values.global.image.owner }}/{{ .Values.services.gateway.image }}:{{ .Values.global.image.tag }}"

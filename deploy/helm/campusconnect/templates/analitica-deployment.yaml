@@ -14,6 +14,8 @@ spec:
       labels:
         app: {{ .Values.services.analitica.name }}
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: {{ .Values.services.analitica.name }}
           image: "{{ .Values.global.image.registry }}/{{ .Values.global.image.owner }}/{{ .Values.services.analitica.image }}:{{ .Values.global.image.tag }}"

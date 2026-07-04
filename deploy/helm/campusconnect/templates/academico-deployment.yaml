@@ -14,6 +14,8 @@ spec:
       labels:
         app: {{ .Values.services.academico.name }}
     spec:
+      imagePullSecrets:
+        - name: ghcr-secret
       containers:
         - name: {{ .Values.services.academico.name }}
           image: "{{ .Values.global.image.registry }}/{{ .Values.global.image.owner }}/{{ .Values.services.academico.image }}:{{ .Values.global.image.tag }}"
