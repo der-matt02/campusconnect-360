@@ -10,6 +10,7 @@ permissions:
   contents: write
   packages: write
   issues: write
+  actions: write
 
 jobs:
   lint-and-test:
@@ -241,3 +242,4 @@ jobs:
         target: ${{ vars.APP_PUBLIC_URL }}
         fail_action: false
         token: ${{ secrets.GITHUB_TOKEN }}
+        artifact_name: 'zapreports'
