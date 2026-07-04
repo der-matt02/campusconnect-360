@@ -9,6 +9,7 @@ spec:
   chart:
     spec:
       chart: deploy/helm/campusconnect
+      reconcileStrategy: Revision
       sourceRef:
         kind: GitRepository
         name: campusconnect-repo
