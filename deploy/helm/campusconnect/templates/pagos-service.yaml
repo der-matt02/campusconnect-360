@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.services.pagos.name }}
+  labels:
+    app: {{ .Values.services.pagos.name }}
+spec:
+  ports:
+    - port: {{ .Values.services.pagos.port }}
+      targetPort: {{ .Values.services.pagos.port }}
+      protocol: TCP
+  selector:
+    app: {{ .Values.services.pagos.name }}

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.services.analitica.name }}
+  labels:
+    app: {{ .Values.services.analitica.name }}
+spec:
+  ports:
+    - port: {{ .Values.services.analitica.port }}
+      targetPort: {{ .Values.services.analitica.port }}
+      protocol: TCP
+  selector:
+    app: {{ .Values.services.analitica.name }}

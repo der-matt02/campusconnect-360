@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.services.academico.name }}
+  labels:
+    app: {{ .Values.services.academico.name }}
+spec:
+  ports:
+    - port: {{ .Values.services.academico.port }}
+      targetPort: {{ .Values.services.academico.port }}
+      protocol: TCP
+  selector:
+    app: {{ .Values.services.academico.name }}

@@ -1,0 +1,77 @@
+# ==========================================
+#  CampusConnect 360 — Central Values Config
+# ==========================================
+
+global:
+  image:
+    registry: ghcr.io
+    owner: der-matt02    # Se convertirá automáticamente a minúsculas
+    tag: latest          # Actualizado automáticamente por el pipeline CI/CD
+
+# ---------- Servicios de Negocio ----------
+services:
+  gateway:
+    name: gateway
+    replicaCount: 1
+    port: 8000
+    image: campusconnect360-gateway
+    env:
+      JWT_SECRET: "supersecretjwtkeyforcampusconnect360"
+      ACCESS_TOKEN_EXPIRE_MINUTES: "60"
+
+  academico:
+    name: academico
+    replicaCount: 1
+    port: 8001
+    image: campusconnect360-academico
+    dbName: academico_db
+
+  pagos:
+    name: pagos
+    replicaCount: 1
+    port: 8002
+    image: campusconnect360-pagos
+    dbName: pagos_db
+
+  notificaciones:
+    name: notificaciones
+    replicaCount: 1
+    port: 8003
+    image: campusconnect360-notificaciones
+    dbName: notificaciones_db
+
+  asistencia:
+    name: asistencia
+    replicaCount: 1
+    port: 8004
+    image: campusconnect360-asistencia
+    dbName: asistencia_db
+
+  analitica:
+    name: analitica
+    replicaCount: 1
+    port: 8005
+    image: campusconnect360-analitica
+    dbName: analitica_db
+
+  frontend:
+    name: frontend
+    replicaCount: 1
+    port: 80
+    image: campusconnect360-frontend
+
+# ---------- Infraestructura de Datos ----------
+infrastructure:
+  postgres:
+    name: postgres
+    port: 5432
+    user: postgres
+    password: "postgres_password_123"
+    storageSize: 1Gi
+
+  rabbitmq:
+    name: rabbitmq
+    port: 5672
+    managementPort: 15672
+    user: campus
+    password: "campus_secret_password"

@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.services.academico.name }}
+  labels:
+    app: {{ .Values.services.academico.name }}
+spec:
+  replicas: {{ .Values.services.academico.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.services.academico.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.services.academico.name }}
+    spec:
+      containers:
+        - name: {{ .Values.services.academico.name }}
+          image: "{{ .Values.global.image.registry }}/{{ .Values.global.image.owner }}/{{ .Values.services.academico.image }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.services.academico.port }}
+          envFrom:
+            - configMapRef:
+                name: campusconnect-common-config
+            - secretRef:
+                name: campusconnect-secrets
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
