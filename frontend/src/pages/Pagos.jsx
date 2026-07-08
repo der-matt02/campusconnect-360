@@ -59,6 +59,7 @@ export default function Pagos() {
             <Users size={17} strokeWidth={2} />
             <h3>Estudiantes matriculados</h3>
           </div>
+          <div className="table-wrap">
           <table>
             <thead><tr><th>ID</th><th>Nombre</th><th>Pagos</th></tr></thead>
             <tbody>
@@ -71,6 +72,7 @@ export default function Pagos() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
 
         <div className="card">
@@ -109,6 +111,7 @@ export default function Pagos() {
           <option value="PENDIENTE">Pendientes</option>
           <option value="CONFIRMADO">Confirmados</option>
         </select>
+        <div className="table-wrap">
         <table style={{ marginTop: "1rem" }}>
           <thead>
             <tr><th>ID Pago</th><th>Nombre Estudiante</th><th>ID Estudiante</th><th>Concepto</th><th>Monto</th><th>Estado</th><th></th></tr>
@@ -139,6 +142,7 @@ export default function Pagos() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

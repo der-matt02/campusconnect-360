@@ -125,6 +125,7 @@ export default function Docente() {
           <Users size={17} strokeWidth={2} />
           <h3>Estudiantes</h3>
         </div>
+        <div className="table-wrap">
         <table>
           <thead><tr><th>ID</th><th>Nombre</th><th>Grado</th><th></th></tr></thead>
           <tbody>
@@ -141,6 +142,7 @@ export default function Docente() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
 
       {history && (
@@ -151,6 +153,7 @@ export default function Docente() {
             </button>
             <h3 style={{ marginTop: 0 }}>Historial de {history.id}</h3>
             <h4 className="section-title"><CalendarCheck size={15} strokeWidth={2} />Asistencia</h4>
+            <div className="table-wrap">
             <table>
               <thead><tr><th>Fecha</th><th>Estado</th></tr></thead>
               <tbody>
@@ -159,7 +162,9 @@ export default function Docente() {
                 ))}
               </tbody>
             </table>
+            </div>
             <h4 className="section-title"><AlertTriangle size={15} strokeWidth={2} />Incidentes</h4>
+            <div className="table-wrap">
             <table>
               <thead><tr><th>Severidad</th><th>Descripcion</th></tr></thead>
               <tbody>
@@ -168,6 +173,7 @@ export default function Docente() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}

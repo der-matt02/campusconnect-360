@@ -297,6 +297,7 @@ export default function Academico() {
           <Users size={17} strokeWidth={2} />
           <h3>Estudiantes</h3>
         </div>
+        <div className="table-wrap">
         <table>
           <thead>
             <tr>
@@ -351,6 +352,7 @@ export default function Academico() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {detail && (
@@ -365,6 +367,7 @@ export default function Academico() {
               Estado financiero: <span className={`badge ${detail.financial_status === "AL_DIA" ? "ok" : "warn"}`}>{detail.financial_status}</span>
             </p>
             <h4 className="section-title"><BookPlus size={15} strokeWidth={2} />Matriculas</h4>
+            <div className="table-wrap">
             <table>
               <thead><tr><th>ID</th><th>Periodo</th><th>Estado</th></tr></thead>
               <tbody>
@@ -373,7 +376,9 @@ export default function Academico() {
                 ))}
               </tbody>
             </table>
+            </div>
             <h4 className="section-title"><History size={15} strokeWidth={2} />Historial de eventos</h4>
+            <div className="table-wrap">
             <table>
               <thead><tr><th>Evento</th><th>Resumen</th><th>Correlacion</th></tr></thead>
               <tbody>
@@ -382,6 +387,7 @@ export default function Academico() {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       )}

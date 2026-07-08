@@ -29,7 +29,7 @@ export default function Layout({ children }) {
           <span className="brand-mark">
             <School size={16} strokeWidth={2} />
           </span>
-          CampusConnect 360
+          <span className="brand-text">CampusConnect 360</span>
         </span>
         {/* Cada rol solo tiene acceso a su propio portal (ver ROLE_PERMISSIONS
             en el Gateway), asi que se muestra como una etiqueta fija en vez

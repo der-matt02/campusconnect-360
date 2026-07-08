@@ -115,6 +115,7 @@ export default function Dashboard() {
             <h3>Estado del ecosistema</h3>
           </div>
           {health && (
+            <div className="table-wrap">
             <table>
               <tbody>
                 <tr>
@@ -131,6 +132,7 @@ export default function Dashboard() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
 
@@ -169,6 +171,7 @@ export default function Dashboard() {
           <History size={17} strokeWidth={2} />
           <h3>Eventos recientes (trazabilidad)</h3>
         </div>
+        <div className="table-wrap">
         <table>
           <thead>
             <tr>
@@ -194,6 +197,7 @@ export default function Dashboard() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

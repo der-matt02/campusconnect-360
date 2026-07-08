@@ -209,6 +209,7 @@ button.green:hover { background: #27ae60; }
 .section-title h3 { margin: 0; }
 
 /* ---------- Tables ---------- */
+.table-wrap { width: 100%; overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; }
 th, td { text-align: left; padding: 0.6rem 0.5rem; border-bottom: 1px solid var(--borde); font-size: 0.9rem; }
 th { color: var(--gris); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; }
@@ -383,4 +384,19 @@ tbody tr:hover { background: var(--fondo); }
   .login-panel { grid-template-columns: 1fr; }
   .login-brand { padding: 2rem; }
   .role-picker { grid-template-columns: 1fr; }
+}
+
+/* ---------- Responsive: navbar y contenedor en pantallas chicas ---------- */
+@media (max-width: 640px) {
+  .container { width: 100%; padding: 0 1rem; margin: 1rem auto; }
+  .navbar { flex-wrap: wrap; row-gap: 0.5rem; padding: 0.6rem 1rem; }
+  .brand-text { display: none; }
+  .portal-badge { order: 3; }
+  .user-chip .user-info { display: none; }
+  .navbar .spacer { flex-basis: 100%; order: 2; height: 0; }
+}
+
+@media (max-width: 480px) {
+  .metric .value { font-size: 1.4rem; }
+  .modal-content { padding: 1rem; }
 }
