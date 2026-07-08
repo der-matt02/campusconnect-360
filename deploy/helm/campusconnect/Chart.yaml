@@ -1,0 +1,6 @@
+apiVersion: v2
+name: campusconnect
+description: Umbrella Chart de Helm para el ecosistema CampusConnect 360
+type: application
+version: 1.0.0
+appVersion: "1.0.0"

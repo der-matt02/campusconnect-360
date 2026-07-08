@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.services.notificaciones.name }}
+  labels:
+    app: {{ .Values.services.notificaciones.name }}
+spec:
+  replicas: {{ .Values.services.notificaciones.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.services.notificaciones.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.services.notificaciones.name }}
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: {{ .Values.services.notificaciones.name }}
+          image: "{{ .Values.global.image.registry }}/{{ .Values.global.image.owner }}/{{ .Values.services.notificaciones.image }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.services.notificaciones.port }}
+          envFrom:
+            - configMapRef:
+                name: campusconnect-common-config
+            - secretRef:
+                name: campusconnect-secrets
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
