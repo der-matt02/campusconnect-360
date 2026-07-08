@@ -26,6 +26,7 @@ coverage/
 
 # ---------- Docker ----------
 *.pid
+docker-compose.override.yml
 
 # ---------- Editores / SO ----------
 .DS_Store
