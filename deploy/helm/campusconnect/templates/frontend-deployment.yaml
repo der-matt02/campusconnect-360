@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.services.frontend.name }}
+  labels:
+    app: {{ .Values.services.frontend.name }}
+spec:
+  replicas: {{ .Values.services.frontend.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.services.frontend.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.services.frontend.name }}
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: {{ .Values.services.frontend.name }}
+          image: "{{ .Values.global.image.registry }}/{{ .Values.global.image.owner }}/{{ .Values.services.frontend.image }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.services.frontend.port }}
+          resources:
+            limits:
+              cpu: 500m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi

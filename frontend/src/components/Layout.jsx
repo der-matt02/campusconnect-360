@@ -1,13 +1,17 @@
 // Barra de navegacion y contenedor comun de los portales.
-import { NavLink, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { School, LogOut } from "lucide-react";
 import { useAuth } from "../auth";
+import { ROLE_LABELS } from "../roles";
 
-const LINKS = [
-  { to: "/academico", label: "Portal Academico" },
-  { to: "/pagos", label: "Portal Financiero" },
-  { to: "/docente", label: "Portal Docente" },
-  { to: "/dashboard", label: "Dashboard" },
-];
+function initials(name = "") {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join("");
+}
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
@@ -21,17 +25,26 @@ export default function Layout({ children }) {
   return (
     <div>
       <nav className="navbar">
-        <span className="brand">CampusConnect 360</span>
-        {LINKS.map((l) => (
-          <NavLink key={l.to} to={l.to}>
-            {l.label}
-          </NavLink>
-        ))}
-        <span className="spacer" />
-        <span className="user">
-          {user?.name} ({user?.role})
+        <span className="brand">
+          <span className="brand-mark">
+            <School size={16} strokeWidth={2} />
+          </span>
+          <span className="brand-text">CampusConnect 360</span>
         </span>
-        <button className="secondary" onClick={handleLogout}>
+        {/* Cada rol solo tiene acceso a su propio portal (ver ROLE_PERMISSIONS
+            en el Gateway), asi que se muestra como una etiqueta fija en vez
+            de un menu de navegacion con links a portales ajenos. */}
+        <span className="portal-badge">{ROLE_LABELS[user?.role] || user?.role}</span>
+        <span className="spacer" />
+        <span className="user-chip">
+          <span className="avatar">{initials(user?.name)}</span>
+          <span className="user-info">
+            <strong>{user?.name}</strong>
+            <small>{ROLE_LABELS[user?.role] || user?.role}</small>
+          </span>
+        </span>
+        <button className="secondary icon-btn" onClick={handleLogout}>
+          <LogOut size={15} strokeWidth={2} />
           Salir
         </button>
       </nav>

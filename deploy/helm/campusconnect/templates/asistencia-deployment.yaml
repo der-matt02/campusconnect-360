@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.services.asistencia.name }}
+  labels:
+    app: {{ .Values.services.asistencia.name }}
+spec:
+  replicas: {{ .Values.services.asistencia.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.services.asistencia.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.services.asistencia.name }}
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: {{ .Values.services.asistencia.name }}
+          image: "{{ .Values.global.image.registry }}/{{ .Values.global.image.owner }}/{{ .Values.services.asistencia.image }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.services.asistencia.port }}
+          envFrom:
+            - configMapRef:
+                name: campusconnect-common-config
+            - secretRef:
+                name: campusconnect-secrets
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi

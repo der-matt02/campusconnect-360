@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.services.analitica.name }}
+  labels:
+    app: {{ .Values.services.analitica.name }}
+spec:
+  replicas: {{ .Values.services.analitica.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ .Values.services.analitica.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.services.analitica.name }}
+    spec:
+      imagePullSecrets:
+        - name: ghcr-secret
+      containers:
+        - name: {{ .Values.services.analitica.name }}
+          image: "{{ .Values.global.image.registry }}/{{ .Values.global.image.owner }}/{{ .Values.services.analitica.image }}:{{ .Values.global.image.tag }}"
+          imagePullPolicy: Always
+          ports:
+            - containerPort: {{ .Values.services.analitica.port }}
+          envFrom:
+            - configMapRef:
+                name: campusconnect-common-config
+            - secretRef:
+                name: campusconnect-secrets
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi

@@ -1,0 +1,27 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: campusconnect
+  namespace: flux-system
+spec:
+  interval: 1m
+  targetNamespace: campusconnect-dev
+  chart:
+    spec:
+      chart: deploy/helm/campusconnect
+      reconcileStrategy: Revision
+      sourceRef:
+        kind: GitRepository
+        name: campusconnect-repo
+        namespace: flux-system
+  install:
+    createNamespace: true
+    remediation:
+      retries: 3
+  upgrade:
+    remediation:
+      retries: 3
+  valuesFrom:
+    - kind: ConfigMap
+      name: campusconnect-values
+      optional: true

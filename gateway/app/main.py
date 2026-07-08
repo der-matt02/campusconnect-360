@@ -35,7 +35,7 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
     "academico": {"academico"},
     "pagos":     {"pagos"},
     "docente":   {"asistencia"},
-    "director":  {"analitica", "notificaciones"},
+    "director":  {"analitica", "notificaciones", "academico"},
 }
 
 app = FastAPI(

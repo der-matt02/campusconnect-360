@@ -21,6 +21,8 @@ Funcionamiento:
     6. Mantiene el túnel activo hasta Ctrl+C y limpia al salir.
 """
 
+from __future__ import annotations
+
 import re
 import signal
 import subprocess

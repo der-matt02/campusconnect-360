@@ -1,0 +1,62 @@
+global:
+  image:
+    owner: der-matt02
+    registry: ghcr.io
+    tag: 3d8dc6a05a0cf55b831e54192517a6d19d7ab0fa
+infrastructure:
+  postgres:
+    name: postgres
+    password: postgres_password_123
+    port: 5432
+    storageSize: 1Gi
+    user: postgres
+  rabbitmq:
+    managementPort: 15672
+    name: rabbitmq
+    password: campus_secret_password
+    port: 5672
+    user: campus
+services:
+  academico:
+    dbName: academico_db
+    image: campusconnect360-academico
+    name: academico
+    port: 8001
+    replicaCount: 1
+  analitica:
+    dbName: analitica_db
+    image: campusconnect360-analitica
+    name: analitica
+    port: 8005
+    replicaCount: 1
+  asistencia:
+    dbName: asistencia_db
+    image: campusconnect360-asistencia
+    name: asistencia
+    port: 8004
+    replicaCount: 1
+  frontend:
+    image: campusconnect360-frontend
+    name: frontend
+    port: 80
+    replicaCount: 1
+  gateway:
+    env:
+      ACCESS_TOKEN_EXPIRE_MINUTES: '60'
+      JWT_SECRET: supersecretjwtkeyforcampusconnect360
+    image: campusconnect360-gateway
+    name: gateway
+    port: 8000
+    replicaCount: 1
+  notificaciones:
+    dbName: notificaciones_db
+    image: campusconnect360-notificaciones
+    name: notificaciones
+    port: 8003
+    replicaCount: 1
+  pagos:
+    dbName: pagos_db
+    image: campusconnect360-pagos
+    name: pagos
+    port: 8002
+    replicaCount: 1

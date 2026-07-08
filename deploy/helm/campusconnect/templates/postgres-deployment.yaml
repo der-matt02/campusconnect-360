@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.infrastructure.postgres.name }}
+  labels:
+    app: {{ .Values.infrastructure.postgres.name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.infrastructure.postgres.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.infrastructure.postgres.name }}
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: {{ .Values.infrastructure.postgres.port }}
+          env:
+            - name: POSTGRES_USER
+              value: {{ .Values.infrastructure.postgres.user | quote }}
+            - name: POSTGRES_PASSWORD
+              value: {{ .Values.infrastructure.postgres.password | quote }}
+            - name: DB_ACADEMICO
+              value: {{ .Values.services.academico.dbName | quote }}
+            - name: DB_PAGOS
+              value: {{ .Values.services.pagos.dbName | quote }}
+            - name: DB_NOTIFICACIONES
+              value: {{ .Values.services.notificaciones.dbName | quote }}
+            - name: DB_ASISTENCIA
+              value: {{ .Values.services.asistencia.dbName | quote }}
+            - name: DB_ANALITICA
+              value: {{ .Values.services.analitica.dbName | quote }}
+          volumeMounts:
+            - name: postgres-db-data
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-init-script
+              mountPath: /docker-entrypoint-initdb.d
+          resources:
+            limits:
+              cpu: 500m
+              memory: 512Mi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+      volumes:
+        - name: postgres-db-data
+          persistentVolumeClaim:
+            claimName: {{ .Values.infrastructure.postgres.name }}-pvc
+        - name: postgres-init-script
+          configMap:
+            name: {{ .Values.infrastructure.postgres.name }}-init-script
+            defaultMode: 0755
