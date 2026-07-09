@@ -4,7 +4,11 @@
 
 | Integrante | Responsabilidades |
 |------------|-------------------|
-| _(completar)_ | _(completar)_ |
+| Diego Correa | Backend Developer & QA Lead (17 commits). Lideró el desarrollo del RBAC en el Gateway y pruebas unitarias de roles. Diseñó pruebas de resiliencia (reintentos, DLQ e idempotencia) y rediseñó el login de la UI. |
+| Mathew Baquero | Arquitecto de Software & Principal Fullstack Developer (47 commits). Inicializó la estructura del monorepo, capa compartida (RabbitMQ y eventos), Gateway, scaffolding en React, portales operacionales, y documentó la arquitectura. |
+| Luis Pineda | Backend Developer (Refactorización y UI Docente) (10 commits). Refactorizó funciones comunes y constantes HTTP. Implementó validaciones de Pydantic (email/deudas) y mejoras en el portal del Docente (vistas y validaciones). |
+| Mateo Herrera | Backend Developer (Servicio Académico) (7 commits). Cimentó el Servicio Académico, incluyendo Dockerfile, ORM (SQLAlchemy), schemas (Pydantic), Outbox pattern para StudentEnrolled y consumidor de PaymentConfirmed. |
+| Galo Guevara | DevSecOps Specialist & Backend Developer (37 commits). Diseñó el pipeline CI/CD en GitHub Actions (Ruff, Snyk, GitLeaks, Trivy, OWASP ZAP). Configuró Flux CD, Helm en Minikube y automatizó el túnel con start_tunnel.py. |
 
 ## Principales decisiones tomadas
 
