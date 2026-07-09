@@ -2,7 +2,7 @@ global:
   image:
     owner: der-matt02
     registry: ghcr.io
-    tag: 23b037f1ff922cb75c05b85e0404db827d0937ae
+    tag: 4567f1d59537f91d029725b71ba880abacf415a8
 infrastructure:
   postgres:
     name: postgres
