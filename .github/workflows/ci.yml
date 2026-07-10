@@ -2,9 +2,9 @@ name: DevSecOps CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop, build/devsecops ]
+    branches: [ main, develop, build/devsecops, feature/devsecops-project ]
   pull_request:
-    branches: [ main, develop, build/devsecops ]
+    branches: [ main, develop, build/devsecops, feature/devsecops-project ]
 
 permissions:
   contents: write
