@@ -189,10 +189,35 @@ jobs:
           trivy-report-${{ matrix.service.name }}.txt
           sbom-${{ matrix.service.name }}.json
 
+  policy-check:
+    name: Policy Validation (Conftest)
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v4
+      with:
+        version: v3.14.4
+
+    - name: Render Helm chart
+      run: helm template campusconnect deploy/helm/campusconnect > rendered-manifests.yaml
+
+    - name: Install Conftest
+      run: |
+        CONFTEST_VERSION=0.53.0
+        curl -sSL -o conftest.tar.gz "https://github.com/open-policy-agent/conftest/releases/download/v${CONFTEST_VERSION}/conftest_${CONFTEST_VERSION}_Linux_x86_64.tar.gz"
+        tar xzf conftest.tar.gz
+        sudo mv conftest /usr/local/bin
+
+    - name: Run policy checks
+      run: conftest test rendered-manifests.yaml -p policy
+
   deploy-gitops:
     name: GitOps Release Deploy
     runs-on: ubuntu-latest
-    needs: [build-and-push]
+    needs: [build-and-push, policy-check]
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
