@@ -1,5 +1,8 @@
 # CampusConnect 360
 
+![Status](https://img.shields.io/badge/Status-Active-success)
+![Docker](https://img.shields.io/badge/Docker-Ready-blue)
+
 > Ecosistema funcional de integración para una red de colegios.
 > Proyecto Integrador — Integración de Sistemas.
 
