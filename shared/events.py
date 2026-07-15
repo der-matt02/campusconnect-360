@@ -11,13 +11,14 @@ from __future__ import annotations
 
 import uuid
 from datetime import datetime, timezone
+from enum import StrEnum
 from typing import Any, Dict, Optional
 
 from pydantic import BaseModel, Field
 
 
 # ---------- Tipos de evento (constantes) ----------
-class EventType:
+class EventType(StrEnum):
     STUDENT_ENROLLED = "StudentEnrolled"
     PAYMENT_CONFIRMED = "PaymentConfirmed"
     ATTENDANCE_RECORDED = "AttendanceRecorded"
@@ -26,10 +27,12 @@ class EventType:
 
 
 def _now_iso() -> str:
+    """Genera un string ISO-8601 con la fecha y hora actual en UTC."""
     return datetime.now(timezone.utc).isoformat()
 
 
 def _new_id(prefix: str) -> str:
+    """Genera un identificador único con un prefijo especificado."""
     return f"{prefix}-{uuid.uuid4().hex[:12]}"
 
 
