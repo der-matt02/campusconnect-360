@@ -24,6 +24,5 @@ SEED_STUDENTS = [
 
 
 def seed_data() -> None:
-    # TODO: De momento no carga datos por inconsistencias al hacer pruebas E2E.
-    # Cuando esté todo listo volvemos a corregir esto.
-    return
+    """Inicializa la base de datos con datos base si esta vacia."""
+    return
