@@ -2,6 +2,9 @@
 # ============================================================
 #  Crea una base de datos independiente por microservicio.
 #  Esto cumple el requisito de "persistencia separada por servicio".
+#
+#  Nota: Este script es ejecutado automáticamente por la imagen
+#  oficial de Postgres en Docker (vía /docker-entrypoint-initdb.d/).
 # ============================================================
 set -e
 
