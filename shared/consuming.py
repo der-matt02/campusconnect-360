@@ -7,7 +7,7 @@ Encapsula el patron repetido en todos los servicios:
 from __future__ import annotations
 
 import logging
-from typing import Callable
+from typing import Any, Callable
 
 from .events import Event
 from .idempotency import already_processed, mark_processed
@@ -17,10 +17,10 @@ logger = logging.getLogger("consuming")
 
 def make_idempotent_handler(
     *,
-    session_factory: Callable,
+    session_factory: Callable[[], Any],
     consumer_name: str,
-    processed_model,
-    on_event: Callable[[object, Event], None],
+    processed_model: Any,
+    on_event: Callable[[Any, Event], None],
 ) -> Callable[[Event], None]:
     """Devuelve un handler que aplica idempotencia y manejo de sesion.
 
