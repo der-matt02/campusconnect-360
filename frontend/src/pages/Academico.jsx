@@ -270,50 +270,58 @@ export default function Academico() {
             </tr>
           </thead>
           <tbody>
-            {students.map((s) => {
-              const activeEnrollment = (s.enrollments || []).find((e) => e.status === "ACTIVA") || s.enrollments?.[0];
-              const selectedRowPeriod = rowPeriods[s.id] || periods[0] || "2026-1";
-              return (
-                <tr key={s.id}>
-                  <td>{s.id}</td>
-                  <td>{s.full_name}</td>
-                  <td>{s.grade}</td>
-                  <td>{s.school_id}</td>
-                  <td>
-                    <span className={`badge ${s.financial_status === "AL_DIA" ? "ok" : "warn"}`}>
-                      {s.financial_status}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="muted">{activeEnrollment ? activeEnrollment.period : selectedRowPeriod}</span>
-                  </td>
-                  <td>
-                    <span className={`badge icon-btn ${activeEnrollment ? "ok" : "warn"}`}>
-                      <BadgeCheck size={13} strokeWidth={2} />
-                      {activeEnrollment ? "Matriculado" : "No matriculado"}
-                    </span>
-                  </td>
-                  <td>
-                    <button className="secondary icon-btn" onClick={() => viewDetail(s.id)}>
-                      <Eye size={14} strokeWidth={2} />
-                      Ver ficha
-                    </button>{" "}
-                     {!activeEnrollment && (
-                      <button 
-                        className="green icon-btn" 
-                        onClick={() => {
-                          console.log("Boton matricular clickeado para:", s.id, "periodo:", selectedRowPeriod);
-                          enroll(s.id, s.full_name, selectedRowPeriod);
-                        }}
-                      >
-                        <BadgeCheck size={14} strokeWidth={2} />
-                        Matricular
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+            {students.length === 0 ? (
+              <tr>
+                <td colSpan="8" style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
+                  No hay estudiantes registrados.
+                </td>
+              </tr>
+            ) : (
+              students.map((s) => {
+                const activeEnrollment = (s.enrollments || []).find((e) => e.status === "ACTIVA") || s.enrollments?.[0];
+                const selectedRowPeriod = rowPeriods[s.id] || periods[0] || "2026-1";
+                return (
+                  <tr key={s.id}>
+                    <td>{s.id}</td>
+                    <td>{s.full_name}</td>
+                    <td>{s.grade}</td>
+                    <td>{s.school_id}</td>
+                    <td>
+                      <span className={`badge ${s.financial_status === "AL_DIA" ? "ok" : "warn"}`}>
+                        {s.financial_status}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="muted">{activeEnrollment ? activeEnrollment.period : selectedRowPeriod}</span>
+                    </td>
+                    <td>
+                      <span className={`badge icon-btn ${activeEnrollment ? "ok" : "warn"}`}>
+                        <BadgeCheck size={13} strokeWidth={2} />
+                        {activeEnrollment ? "Matriculado" : "No matriculado"}
+                      </span>
+                    </td>
+                    <td>
+                      <button className="secondary icon-btn" onClick={() => viewDetail(s.id)}>
+                        <Eye size={14} strokeWidth={2} />
+                        Ver ficha
+                      </button>{" "}
+                       {!activeEnrollment && (
+                        <button 
+                          className="green icon-btn" 
+                          onClick={() => {
+                            console.log("Boton matricular clickeado para:", s.id, "periodo:", selectedRowPeriod);
+                            enroll(s.id, s.full_name, selectedRowPeriod);
+                          }}
+                        >
+                          <BadgeCheck size={14} strokeWidth={2} />
+                          Matricular
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
         </div>
