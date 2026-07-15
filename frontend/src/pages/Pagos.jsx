@@ -117,29 +117,37 @@ export default function Pagos() {
             <tr><th>ID Pago</th><th>Nombre Estudiante</th><th>ID Estudiante</th><th>Concepto</th><th>Monto</th><th>Estado</th><th></th></tr>
           </thead>
           <tbody>
-            {payments.map((p) => {
-              const student = students.find((s) => s.id === p.student_id);
-              return (
-                <tr key={p.id}>
-                  <td>{p.id}</td>
-                  <td>{student ? student.full_name : "Desconocido"}</td>
-                  <td>{p.student_id}</td>
-                  <td>{p.concept}</td>
-                  <td>${p.amount}</td>
-                  <td>
-                    <span className={`badge ${p.status === "CONFIRMADO" ? "ok" : "warn"}`}>{p.status}</span>
-                  </td>
-                  <td>
-                    {p.status === "PENDIENTE" && (
-                      <button className="green icon-btn" onClick={() => confirm(p.id)}>
-                        <CheckCircle2 size={14} strokeWidth={2} />
-                        Confirmar pago
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
+            {payments.length === 0 ? (
+              <tr>
+                <td colSpan="7" style={{ textAlign: "center", padding: "2rem", color: "var(--text-muted)" }}>
+                  No hay pagos registrados.
+                </td>
+              </tr>
+            ) : (
+              payments.map((p) => {
+                const student = students.find((s) => s.id === p.student_id);
+                return (
+                  <tr key={p.id}>
+                    <td>{p.id}</td>
+                    <td>{student ? student.full_name : "Desconocido"}</td>
+                    <td>{p.student_id}</td>
+                    <td>{p.concept}</td>
+                    <td>${p.amount}</td>
+                    <td>
+                      <span className={`badge ${p.status === "CONFIRMADO" ? "ok" : "warn"}`}>{p.status}</span>
+                    </td>
+                    <td>
+                      {p.status === "PENDIENTE" && (
+                        <button className="green icon-btn" onClick={() => confirm(p.id)}>
+                          <CheckCircle2 size={14} strokeWidth={2} />
+                          Confirmar pago
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })
+            )}
           </tbody>
         </table>
         </div>
