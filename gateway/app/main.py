@@ -58,6 +58,13 @@ class LoginRequest(BaseModel):
     password: str
 
 
+@app.get("/", tags=["infra"])
+def root():
+    """Endpoint raiz para verificacion rapida."""
+    return {"message": "CampusConnect 360 API Gateway", "status": "online"}
+
+
+
 @app.post("/auth/login", tags=["auth"])
 def login(req: LoginRequest):
     """Valida credenciales y emite un JWT."""
