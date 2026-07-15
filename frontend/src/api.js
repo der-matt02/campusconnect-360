@@ -8,6 +8,16 @@ function getToken() {
   return localStorage.getItem("token");
 }
 
+/**
+ * Realiza una petición HTTP al API Gateway, adjuntando opcionalmente el token JWT.
+ * @param {string} path - Ruta de la API (ej. /auth/login)
+ * @param {Object} options - Opciones de la petición
+ * @param {string} [options.method="GET"] - Método HTTP
+ * @param {Object} [options.body] - Cuerpo de la petición (se serializa a JSON)
+ * @param {boolean} [options.auth=true] - Si es true, adjunta el token JWT
+ * @returns {Promise<any>} Datos JSON de la respuesta
+ * @throws {Error} Si la respuesta no es OK
+ */
 async function request(path, { method = "GET", body, auth = true } = {}) {
   const headers = { "Content-Type": "application/json" };
   if (auth && getToken()) {
@@ -25,6 +35,9 @@ async function request(path, { method = "GET", body, auth = true } = {}) {
   return data;
 }
 
+/**
+ * Objeto central que expone todos los endpoints del backend de CampusConnect 360.
+ */
 export const api = {
   login: (username, password) =>
     request("/auth/login", { method: "POST", body: { username, password }, auth: false }),
